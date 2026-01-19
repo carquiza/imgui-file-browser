@@ -149,6 +149,71 @@ config.colors.selectedRow = IM_COL32(0, 120, 200, 180);
 ImFileBrowser::SetConfig(config);
 ```
 
+### UI Scaling (DPI / User Preference)
+
+ImFileBrowser supports scaling for high-DPI displays and user preferences. The scale factor affects all dialog elements including window size, buttons, icons, row heights, and column widths.
+
+#### Setting Scale When Opening
+
+```cpp
+// Get DPI scale from your windowing system (e.g., GLFW)
+float dpiScale = 1.0f;  // glfwGetWindowContentScale(window, &dpiScale, nullptr);
+
+// User preference scale (e.g., from Ctrl+Plus/Minus)
+float userScale = 1.2f;
+
+// Set combined scale in config
+ImFileBrowser::DialogConfig config;
+config.mode = ImFileBrowser::Mode::Open;
+config.title = "Open File";
+config.scale = dpiScale * userScale;  // Combined effective scale
+browser.Open(config);
+```
+
+#### Updating Scale at Runtime
+
+If the user changes scale while the dialog is open (e.g., via Ctrl+Plus/Minus):
+
+```cpp
+// When scale changes, update the dialog
+void onScaleChanged(float newDpiScale, float newUserScale) {
+    float effectiveScale = newDpiScale * newUserScale;
+
+    // Update open dialogs
+    fileBrowser.SetScale(effectiveScale);
+    confirmDialog.SetScale(effectiveScale);
+
+    // Also update ImGui's font scale for consistency
+    ImGui::GetIO().FontGlobalScale = newUserScale;
+}
+```
+
+#### Scale Values
+
+| Scale | Use Case |
+|-------|----------|
+| 0.5 - 0.75 | Compact UI, more content visible |
+| 1.0 | Default (96 DPI equivalent) |
+| 1.25 - 1.5 | High-DPI displays (125-150% scaling) |
+| 2.0 | 4K displays, accessibility |
+| 2.0 - 3.0 | Touch devices, large displays |
+
+#### Base Size Constants
+
+All UI elements use base sizes defined in `ImFileBrowser::BaseSize` namespace. These are multiplied by the scale factor at runtime:
+
+```cpp
+// Example base sizes (at 1.0x scale)
+BaseSize::DIALOG_WIDTH      // 650px - default dialog width
+BaseSize::BUTTON_HEIGHT     // 28px  - button height
+BaseSize::ROW_HEIGHT        // 24px  - file list row height
+BaseSize::ICON_SIZE         // 18px  - icon dimensions
+
+// Touch mode uses larger base sizes
+BaseSize::TOUCH_ROW_HEIGHT  // 52px  - touch-friendly rows
+BaseSize::TOUCH_BUTTON_HEIGHT // 48px - touch-friendly buttons
+```
+
 ## Signal Support (Optional)
 
 For callback-based event handling without signals:
