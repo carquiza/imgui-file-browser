@@ -60,6 +60,22 @@ DialogResult ConfirmationDialog::Render() {
         return DialogResult::None;
     }
 
+    // Check if scale changed since last frame - update sizes
+    if (m_scale != m_prevScale) {
+        if (m_config.touchMode) {
+            m_buttonHeight = BaseSize::TOUCH_BUTTON_HEIGHT * m_scale;
+            m_buttonWidth = BaseSize::TOUCH_BUTTON_WIDTH * m_scale;
+            m_iconSize = BaseSize::TOUCH_CONFIRM_ICON_SIZE * m_scale;
+            m_fontSize = BaseSize::TOUCH_FONT_SIZE * m_scale;
+        } else {
+            m_buttonHeight = BaseSize::BUTTON_HEIGHT * m_scale;
+            m_buttonWidth = BaseSize::BUTTON_WIDTH * m_scale;
+            m_iconSize = BaseSize::CONFIRM_ICON_SIZE * m_scale;
+            m_fontSize = BaseSize::FONT_SIZE * m_scale;
+        }
+        m_prevScale = m_scale;
+    }
+
     // Open popup on first frame
     if (m_shouldOpen) {
         ImGui::OpenPopup(m_config.title.c_str());

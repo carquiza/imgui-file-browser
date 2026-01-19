@@ -159,6 +159,7 @@ private:
 
     // Scale factor
     float m_scale = 1.0f;
+    float m_prevScale = 1.0f;  // Track previous scale to detect changes
 
     // Sizing (computed based on touch mode and scale)
     float m_buttonHeight = 32.0f;

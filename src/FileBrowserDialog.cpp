@@ -7,6 +7,7 @@
 #include "ImFileBrowser/Icons.hpp"
 #include "imgui.h"
 #include <algorithm>
+#include <cfloat>
 #include <cstring>
 #include <cstdio>
 
@@ -108,19 +109,32 @@ Result FileBrowserDialog::Render() {
 
     ImGuiIO& io = ImGui::GetIO();
 
+    // Check if scale changed since last frame
+    bool scaleChanged = (m_scale != m_prevScale);
+    if (scaleChanged) {
+        UpdateSizing();
+        m_prevScale = m_scale;
+    }
+
     // Touch mode: fullscreen dialog for maximum usability
     // Desktop mode: centered dialog with scaled size and constraints
     if (m_config.touchMode) {
         ImGui::SetNextWindowPos(ImVec2(0, 0));
         ImGui::SetNextWindowSize(io.DisplaySize);
     } else {
-        // Apply window size constraints (scaled)
+        // Apply window size constraints (scaled) - always apply
         ImVec2 minSize(BaseSize::DIALOG_MIN_WIDTH * m_scale, BaseSize::DIALOG_MIN_HEIGHT * m_scale);
         ImGui::SetNextWindowSizeConstraints(minSize, ImVec2(FLT_MAX, FLT_MAX));
 
         ImVec2 center = ImVec2(io.DisplaySize.x * 0.5f, io.DisplaySize.y * 0.5f);
         ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
-        ImGui::SetNextWindowSize(ImVec2(m_dialogWidth, m_dialogHeight), ImGuiCond_Appearing);
+
+        // Force resize when scale changes, otherwise only on first appearance
+        if (scaleChanged) {
+            ImGui::SetNextWindowSize(ImVec2(m_dialogWidth, m_dialogHeight), ImGuiCond_Always);
+        } else {
+            ImGui::SetNextWindowSize(ImVec2(m_dialogWidth, m_dialogHeight), ImGuiCond_Appearing);
+        }
     }
 
     // Window flags
