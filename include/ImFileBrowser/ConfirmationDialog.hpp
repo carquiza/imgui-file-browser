@@ -28,6 +28,7 @@ struct ConfirmationConfig {
     bool touchMode = false;
     float minWidth = 300.0f;
     float maxWidth = 500.0f;
+    float scale = 1.0f;                     // UI scale factor (dpi * user scale)
 };
 
 /**
@@ -98,6 +99,17 @@ public:
      */
     DialogResult GetResult() const { return m_result; }
 
+    /**
+     * @brief Set the UI scale factor
+     * @param scale Combined scale (dpiScale * userScale), must be > 0
+     */
+    void SetScale(float scale);
+
+    /**
+     * @brief Get the current UI scale factor
+     */
+    float GetScale() const { return m_scale; }
+
     // ==================== Signals (optional, requires sigslot) ====================
 
 #ifdef IMFILEBROWSER_USE_SIGSLOT
@@ -145,7 +157,10 @@ private:
     DialogResult m_result = DialogResult::None;
     bool m_shouldOpen = false;  // Flag to open popup on next frame
 
-    // Sizing
+    // Scale factor
+    float m_scale = 1.0f;
+
+    // Sizing (computed based on touch mode and scale)
     float m_buttonHeight = 32.0f;
     float m_buttonWidth = 80.0f;
     float m_iconSize = 32.0f;

@@ -9,6 +9,66 @@
 namespace ImFileBrowser {
 
 /**
+ * @brief Base size constants for scaling
+ *
+ * All sizes are defined at 1.0x scale. Multiply by the effective scale
+ * factor (dpiScale * userScale) when using.
+ */
+namespace BaseSize {
+    // Dialog dimensions
+    constexpr float DIALOG_WIDTH = 650.0f;
+    constexpr float DIALOG_HEIGHT = 450.0f;
+    constexpr float DIALOG_MIN_WIDTH = 400.0f;
+    constexpr float DIALOG_MIN_HEIGHT = 300.0f;
+
+    // Desktop mode sizes
+    constexpr float ROW_HEIGHT = 24.0f;
+    constexpr float BUTTON_HEIGHT = 28.0f;
+    constexpr float BUTTON_WIDTH = 80.0f;
+    constexpr float ICON_SIZE = 18.0f;
+    constexpr float FONT_SIZE = 14.0f;
+    constexpr float PATH_BAR_HEIGHT = 32.0f;
+    constexpr float INPUT_HEIGHT = 26.0f;
+    constexpr float ICON_BUTTON_WIDTH = 32.0f;
+
+    // Touch mode sizes (larger for finger-friendly targets)
+    constexpr float TOUCH_ROW_HEIGHT = 52.0f;
+    constexpr float TOUCH_BUTTON_HEIGHT = 48.0f;
+    constexpr float TOUCH_BUTTON_WIDTH = 120.0f;
+    constexpr float TOUCH_ICON_SIZE = 28.0f;
+    constexpr float TOUCH_FONT_SIZE = 16.0f;
+    constexpr float TOUCH_PATH_BAR_HEIGHT = 56.0f;
+    constexpr float TOUCH_INPUT_HEIGHT = 48.0f;
+    constexpr float TOUCH_ICON_BUTTON_WIDTH = 100.0f;
+
+    // Table column widths
+    constexpr float SIZE_COLUMN_WIDTH = 80.0f;
+    constexpr float DATE_COLUMN_WIDTH = 120.0f;
+    constexpr float TOUCH_SIZE_COLUMN_WIDTH = 100.0f;
+    constexpr float TOUCH_DATE_COLUMN_WIDTH = 150.0f;
+
+    // Confirmation dialog
+    constexpr float CONFIRM_MIN_WIDTH = 300.0f;
+    constexpr float CONFIRM_MAX_WIDTH = 500.0f;
+    constexpr float CONFIRM_ICON_SIZE = 32.0f;
+    constexpr float TOUCH_CONFIRM_ICON_SIZE = 48.0f;
+
+    // Spacing
+    constexpr float BUTTON_SPACING = 8.0f;
+    constexpr float DRIVES_COMBO_WIDTH = 90.0f;
+    constexpr float TOUCH_DRIVES_COMBO_WIDTH = 130.0f;
+    constexpr float SORT_COMBO_WIDTH = 70.0f;
+    constexpr float TOUCH_SORT_COMBO_WIDTH = 100.0f;
+    constexpr float POPUP_INPUT_WIDTH = 300.0f;
+
+    // Scrollbar (touch mode uses wider scrollbars)
+    constexpr float SCROLLBAR_WIDTH = 16.0f;
+    constexpr float GRAB_MIN_SIZE = 16.0f;
+    constexpr float TOUCH_SCROLLBAR_WIDTH = 40.0f;
+    constexpr float TOUCH_GRAB_MIN_SIZE = 40.0f;
+}
+
+/**
  * @brief Color configuration for file browser
  */
 struct ColorConfig {

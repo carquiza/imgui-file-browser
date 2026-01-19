@@ -31,6 +31,7 @@ struct DialogConfig {
     bool showHiddenFiles = false;           // Show hidden files/folders
     bool allowCreateFolder = true;          // Show "New Folder" button
     bool touchMode = false;                 // Use touch-optimized sizing
+    float scale = 1.0f;                     // UI scale factor (dpi * user scale)
 };
 
 /**
@@ -93,6 +94,20 @@ public:
      * @return Dialog result (None while open, Selected or Cancelled when closed)
      */
     Result Render();
+
+    /**
+     * @brief Set the UI scale factor
+     * @param scale Combined scale (dpiScale * userScale), must be > 0
+     *
+     * This allows runtime adjustment of the dialog size for DPI and user preferences.
+     * Call this when the scale changes while the dialog is open.
+     */
+    void SetScale(float scale);
+
+    /**
+     * @brief Get the current UI scale factor
+     */
+    float GetScale() const { return m_scale; }
 
     // ==================== Results ====================
 
@@ -185,7 +200,10 @@ private:
     // Drives/roots (cached)
     std::vector<std::string> m_drives;
 
-    // Sizing (computed based on touch mode)
+    // Scale factor
+    float m_scale = 1.0f;
+
+    // Sizing (computed based on touch mode and scale)
     float m_rowHeight = 32.0f;
     float m_buttonHeight = 32.0f;
     float m_buttonWidth = 80.0f;
