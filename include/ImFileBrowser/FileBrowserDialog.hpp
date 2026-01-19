@@ -7,6 +7,7 @@
 #include "Types.hpp"
 #include "FileFilter.hpp"
 #include "FileSystemHelper.hpp"
+#include <ImGuiScaling/ImGuiScaling.hpp>
 #include <string>
 #include <vector>
 #include <functional>
@@ -62,7 +63,7 @@ struct DialogConfig {
  * }
  * @endcode
  */
-class FileBrowserDialog {
+class FileBrowserDialog : public ImGuiScaling::Scalable {
 public:
     FileBrowserDialog();
     ~FileBrowserDialog() = default;
@@ -95,20 +96,6 @@ public:
      */
     Result Render();
 
-    /**
-     * @brief Set the UI scale factor
-     * @param scale Combined scale (dpiScale * userScale), must be > 0
-     *
-     * This allows runtime adjustment of the dialog size for DPI and user preferences.
-     * Call this when the scale changes while the dialog is open.
-     */
-    void SetScale(float scale);
-
-    /**
-     * @brief Get the current UI scale factor
-     */
-    float GetScale() const { return m_scale; }
-
     // ==================== Results ====================
 
     /**
@@ -140,6 +127,11 @@ public:
 
     void SetOnFileSelected(FileSelectedCallback callback) { m_onFileSelected = std::move(callback); }
     void SetOnCancelled(CancelledCallback callback) { m_onCancelled = std::move(callback); }
+
+protected:
+    // ==================== Scaling ====================
+
+    void OnScaleChanged() override;
 
 private:
     // ==================== Rendering ====================
@@ -199,10 +191,6 @@ private:
 
     // Drives/roots (cached)
     std::vector<std::string> m_drives;
-
-    // Scale factor
-    float m_scale = 1.0f;
-    float m_prevScale = 1.0f;  // Track previous scale to detect changes
 
     // Sizing (computed based on touch mode and scale)
     float m_rowHeight = 32.0f;

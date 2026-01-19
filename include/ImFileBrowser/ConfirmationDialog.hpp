@@ -5,6 +5,7 @@
 #pragma once
 
 #include "Types.hpp"
+#include <ImGuiScaling/ImGuiScaling.hpp>
 #include <string>
 #include <vector>
 #include <functional>
@@ -61,7 +62,7 @@ struct ConfirmationConfig {
  * }
  * @endcode
  */
-class ConfirmationDialog {
+class ConfirmationDialog : public ImGuiScaling::Scalable {
 public:
     ConfirmationDialog() = default;
     ~ConfirmationDialog() = default;
@@ -99,17 +100,6 @@ public:
      */
     DialogResult GetResult() const { return m_result; }
 
-    /**
-     * @brief Set the UI scale factor
-     * @param scale Combined scale (dpiScale * userScale), must be > 0
-     */
-    void SetScale(float scale);
-
-    /**
-     * @brief Get the current UI scale factor
-     */
-    float GetScale() const { return m_scale; }
-
     // ==================== Signals (optional, requires sigslot) ====================
 
 #ifdef IMFILEBROWSER_USE_SIGSLOT
@@ -142,6 +132,9 @@ public:
         DialogButton buttons = DialogButton::Ok,
         DialogIcon icon = DialogIcon::Info);
 
+protected:
+    void OnScaleChanged() override;
+
 private:
     void RenderIcon();
     void RenderMessage();
@@ -156,10 +149,6 @@ private:
     ConfirmationConfig m_config;
     DialogResult m_result = DialogResult::None;
     bool m_shouldOpen = false;  // Flag to open popup on next frame
-
-    // Scale factor
-    float m_scale = 1.0f;
-    float m_prevScale = 1.0f;  // Track previous scale to detect changes
 
     // Sizing (computed based on touch mode and scale)
     float m_buttonHeight = 32.0f;

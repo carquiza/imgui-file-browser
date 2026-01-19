@@ -17,11 +17,8 @@ FileBrowserDialog::FileBrowserDialog() {
     m_drives = FileSystemHelper::GetDrives();
 }
 
-void FileBrowserDialog::SetScale(float scale) {
-    if (scale > 0.0f) {
-        m_scale = scale;
-        UpdateSizing();
-    }
+void FileBrowserDialog::OnScaleChanged() {
+    UpdateSizing();
 }
 
 void FileBrowserDialog::Open(const DialogConfig& config) {
@@ -37,7 +34,7 @@ void FileBrowserDialog::Open(const DialogConfig& config) {
     m_pendingActivateIndex = -1;
 
     // Apply scale from config
-    m_scale = (config.scale > 0.0f) ? config.scale : 1.0f;
+    SetScale((config.scale > 0.0f) ? config.scale : 1.0f);
 
     // Set initial path
     if (!config.initialPath.empty() && FileSystemHelper::IsDirectory(config.initialPath)) {
@@ -74,7 +71,7 @@ void FileBrowserDialog::Close() {
 
 void FileBrowserDialog::UpdateSizing() {
     // Use base constants and apply scale
-    const float scale = m_scale;
+    const float scale = GetScale();
 
     if (m_config.touchMode) {
         // Touch mode: use touch-optimized sizes, scaled
@@ -110,10 +107,10 @@ Result FileBrowserDialog::Render() {
     ImGuiIO& io = ImGui::GetIO();
 
     // Check if scale changed since last frame
-    bool scaleChanged = (m_scale != m_prevScale);
+    bool scaleChanged = HasScaleChanged();
     if (scaleChanged) {
-        UpdateSizing();
-        m_prevScale = m_scale;
+        // UpdateSizing() is called automatically via OnScaleChanged()
+        AcknowledgeScaleChange();
     }
 
     // Touch mode: fullscreen dialog for maximum usability
@@ -123,7 +120,7 @@ Result FileBrowserDialog::Render() {
         ImGui::SetNextWindowSize(io.DisplaySize);
     } else {
         // Apply window size constraints (scaled) - always apply
-        ImVec2 minSize(BaseSize::DIALOG_MIN_WIDTH * m_scale, BaseSize::DIALOG_MIN_HEIGHT * m_scale);
+        ImVec2 minSize(BaseSize::DIALOG_MIN_WIDTH * GetScale(), BaseSize::DIALOG_MIN_HEIGHT * GetScale());
         ImGui::SetNextWindowSizeConstraints(minSize, ImVec2(FLT_MAX, FLT_MAX));
 
         ImVec2 center = ImVec2(io.DisplaySize.x * 0.5f, io.DisplaySize.y * 0.5f);
@@ -180,8 +177,8 @@ void FileBrowserDialog::RenderToolbar() {
     // Desktop mode: use compact icon-only buttons (all scaled)
     float buttonHeight = m_buttonHeight;
     float iconButtonWidth = m_config.touchMode
-        ? BaseSize::TOUCH_ICON_BUTTON_WIDTH * m_scale
-        : BaseSize::ICON_BUTTON_WIDTH * m_scale;
+        ? BaseSize::TOUCH_ICON_BUTTON_WIDTH * GetScale()
+        : BaseSize::ICON_BUTTON_WIDTH * GetScale();
 
     // Build button labels with icons
     char backLabel[32], homeLabel[32], refreshLabel[32], newFolderLabel[32];
@@ -221,8 +218,8 @@ void FileBrowserDialog::RenderToolbar() {
     char drivesLabel[32];
     snprintf(drivesLabel, sizeof(drivesLabel), "%s", icons.hdd);
     float drivesWidth = m_config.touchMode
-        ? BaseSize::TOUCH_DRIVES_COMBO_WIDTH * m_scale
-        : BaseSize::DRIVES_COMBO_WIDTH * m_scale;
+        ? BaseSize::TOUCH_DRIVES_COMBO_WIDTH * GetScale()
+        : BaseSize::DRIVES_COMBO_WIDTH * GetScale();
     ImGui::SetNextItemWidth(drivesWidth);
     if (ImGui::BeginCombo("##drives", drivesLabel)) {
         for (const auto& drive : m_drives) {
@@ -260,8 +257,8 @@ void FileBrowserDialog::RenderToolbar() {
 
     // Sort dropdown (right-aligned, scaled)
     float sortWidth = m_config.touchMode
-        ? BaseSize::TOUCH_SORT_COMBO_WIDTH * m_scale
-        : BaseSize::SORT_COMBO_WIDTH * m_scale;
+        ? BaseSize::TOUCH_SORT_COMBO_WIDTH * GetScale()
+        : BaseSize::SORT_COMBO_WIDTH * GetScale();
     ImGui::SameLine(ImGui::GetContentRegionAvail().x - sortWidth);
     ImGui::SetNextItemWidth(sortWidth);
 
@@ -351,8 +348,8 @@ void FileBrowserDialog::RenderFileList() {
     const auto& icons = GetIcons();
 
     // Calculate available height for file list (with scaled spacing)
-    float spacing = BaseSize::BUTTON_SPACING * m_scale;
-    float reservedHeight = m_buttonHeight + 20.0f * m_scale;  // Buttons row
+    float spacing = BaseSize::BUTTON_SPACING * GetScale();
+    float reservedHeight = m_buttonHeight + 20.0f * GetScale();  // Buttons row
     if (m_config.mode != Mode::SelectFolder) {
         reservedHeight += m_inputHeight + spacing;   // Filename input
         reservedHeight += m_inputHeight + spacing;   // Filter selector
@@ -366,8 +363,8 @@ void FileBrowserDialog::RenderFileList() {
 
     // Touch mode: widen scrollbar for fat fingers (scaled)
     if (m_config.touchMode) {
-        ImGui::PushStyleVar(ImGuiStyleVar_ScrollbarSize, BaseSize::TOUCH_SCROLLBAR_WIDTH * m_scale);
-        ImGui::PushStyleVar(ImGuiStyleVar_GrabMinSize, BaseSize::TOUCH_GRAB_MIN_SIZE * m_scale);
+        ImGui::PushStyleVar(ImGuiStyleVar_ScrollbarSize, BaseSize::TOUCH_SCROLLBAR_WIDTH * GetScale());
+        ImGui::PushStyleVar(ImGuiStyleVar_GrabMinSize, BaseSize::TOUCH_GRAB_MIN_SIZE * GetScale());
     }
 
     ImGui::BeginChild("FileList", ImVec2(0, listHeight), ImGuiChildFlags_Borders);
@@ -385,11 +382,11 @@ void FileBrowserDialog::RenderFileList() {
     if (ImGui::BeginTable("Files", 3, tableFlags)) {
         // Column widths (scaled)
         float sizeColWidth = m_config.touchMode
-            ? BaseSize::TOUCH_SIZE_COLUMN_WIDTH * m_scale
-            : BaseSize::SIZE_COLUMN_WIDTH * m_scale;
+            ? BaseSize::TOUCH_SIZE_COLUMN_WIDTH * GetScale()
+            : BaseSize::SIZE_COLUMN_WIDTH * GetScale();
         float dateColWidth = m_config.touchMode
-            ? BaseSize::TOUCH_DATE_COLUMN_WIDTH * m_scale
-            : BaseSize::DATE_COLUMN_WIDTH * m_scale;
+            ? BaseSize::TOUCH_DATE_COLUMN_WIDTH * GetScale()
+            : BaseSize::DATE_COLUMN_WIDTH * GetScale();
 
         ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_WidthStretch);
         ImGui::TableSetupColumn("Size", ImGuiTableColumnFlags_WidthFixed, sizeColWidth);
@@ -546,7 +543,7 @@ void FileBrowserDialog::RenderButtons() {
 
     // Right-align buttons (scaled)
     float buttonWidth = m_buttonWidth;
-    float spacing = BaseSize::BUTTON_SPACING * m_scale;
+    float spacing = BaseSize::BUTTON_SPACING * GetScale();
     float totalWidth = buttonWidth * 2 + spacing;
 
     ImGui::SetCursorPosX(ImGui::GetContentRegionAvail().x - totalWidth + ImGui::GetCursorPosX());
@@ -601,7 +598,7 @@ void FileBrowserDialog::RenderNewFolderPopup() {
 
     if (ImGui::BeginPopupModal("New Folder", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
         ImGui::Text("Enter folder name:");
-        ImGui::SetNextItemWidth(BaseSize::POPUP_INPUT_WIDTH * m_scale);
+        ImGui::SetNextItemWidth(BaseSize::POPUP_INPUT_WIDTH * GetScale());
 
         bool enterPressed = ImGui::InputText("##newfolder", m_newFolderBuffer, sizeof(m_newFolderBuffer),
                                              ImGuiInputTextFlags_EnterReturnsTrue);

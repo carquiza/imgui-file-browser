@@ -9,21 +9,19 @@
 
 namespace ImFileBrowser {
 
-void ConfirmationDialog::SetScale(float scale) {
-    if (scale > 0.0f) {
-        m_scale = scale;
-        // Update sizes with new scale
-        if (m_config.touchMode) {
-            m_buttonHeight = BaseSize::TOUCH_BUTTON_HEIGHT * m_scale;
-            m_buttonWidth = BaseSize::TOUCH_BUTTON_WIDTH * m_scale;
-            m_iconSize = BaseSize::TOUCH_CONFIRM_ICON_SIZE * m_scale;
-            m_fontSize = BaseSize::TOUCH_FONT_SIZE * m_scale;
-        } else {
-            m_buttonHeight = BaseSize::BUTTON_HEIGHT * m_scale;
-            m_buttonWidth = BaseSize::BUTTON_WIDTH * m_scale;
-            m_iconSize = BaseSize::CONFIRM_ICON_SIZE * m_scale;
-            m_fontSize = BaseSize::FONT_SIZE * m_scale;
-        }
+void ConfirmationDialog::OnScaleChanged() {
+    // Update sizes with new scale
+    const float scale = GetScale();
+    if (m_config.touchMode) {
+        m_buttonHeight = BaseSize::TOUCH_BUTTON_HEIGHT * scale;
+        m_buttonWidth = BaseSize::TOUCH_BUTTON_WIDTH * scale;
+        m_iconSize = BaseSize::TOUCH_CONFIRM_ICON_SIZE * scale;
+        m_fontSize = BaseSize::TOUCH_FONT_SIZE * scale;
+    } else {
+        m_buttonHeight = BaseSize::BUTTON_HEIGHT * scale;
+        m_buttonWidth = BaseSize::BUTTON_WIDTH * scale;
+        m_iconSize = BaseSize::CONFIRM_ICON_SIZE * scale;
+        m_fontSize = BaseSize::FONT_SIZE * scale;
     }
 }
 
@@ -34,20 +32,10 @@ void ConfirmationDialog::Show(const ConfirmationConfig& config) {
     m_shouldOpen = true;
 
     // Apply scale from config
-    m_scale = (config.scale > 0.0f) ? config.scale : 1.0f;
+    SetScale((config.scale > 0.0f) ? config.scale : 1.0f);
 
     // Update sizing based on mode and scale
-    if (config.touchMode) {
-        m_buttonHeight = BaseSize::TOUCH_BUTTON_HEIGHT * m_scale;
-        m_buttonWidth = BaseSize::TOUCH_BUTTON_WIDTH * m_scale;
-        m_iconSize = BaseSize::TOUCH_CONFIRM_ICON_SIZE * m_scale;
-        m_fontSize = BaseSize::TOUCH_FONT_SIZE * m_scale;
-    } else {
-        m_buttonHeight = BaseSize::BUTTON_HEIGHT * m_scale;
-        m_buttonWidth = BaseSize::BUTTON_WIDTH * m_scale;
-        m_iconSize = BaseSize::CONFIRM_ICON_SIZE * m_scale;
-        m_fontSize = BaseSize::FONT_SIZE * m_scale;
-    }
+    OnScaleChanged(); // Ensure sizes are updated for the new mode if scale didn't change
 }
 
 void ConfirmationDialog::Hide() {
@@ -60,20 +48,8 @@ DialogResult ConfirmationDialog::Render() {
         return DialogResult::None;
     }
 
-    // Check if scale changed since last frame - update sizes
-    if (m_scale != m_prevScale) {
-        if (m_config.touchMode) {
-            m_buttonHeight = BaseSize::TOUCH_BUTTON_HEIGHT * m_scale;
-            m_buttonWidth = BaseSize::TOUCH_BUTTON_WIDTH * m_scale;
-            m_iconSize = BaseSize::TOUCH_CONFIRM_ICON_SIZE * m_scale;
-            m_fontSize = BaseSize::TOUCH_FONT_SIZE * m_scale;
-        } else {
-            m_buttonHeight = BaseSize::BUTTON_HEIGHT * m_scale;
-            m_buttonWidth = BaseSize::BUTTON_WIDTH * m_scale;
-            m_iconSize = BaseSize::CONFIRM_ICON_SIZE * m_scale;
-            m_fontSize = BaseSize::FONT_SIZE * m_scale;
-        }
-        m_prevScale = m_scale;
+    if (HasScaleChanged()) {
+        AcknowledgeScaleChange();
     }
 
     // Open popup on first frame
@@ -87,9 +63,9 @@ DialogResult ConfirmationDialog::Render() {
     ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
 
     // Calculate width based on content (with scaled constraints)
-    float scaledMinWidth = m_config.minWidth * m_scale;
-    float scaledMaxWidth = m_config.maxWidth * m_scale;
-    float padding = 40.0f * m_scale;
+    float scaledMinWidth = m_config.minWidth * GetScale();
+    float scaledMaxWidth = m_config.maxWidth * GetScale();
+    float padding = 40.0f * GetScale();
 
     float contentWidth = ImGui::CalcTextSize(m_config.message.c_str()).x + padding;
     if (!m_config.detailMessage.empty()) {
@@ -101,7 +77,7 @@ DialogResult ConfirmationDialog::Render() {
 
     // Add icon width if present (with scaled spacing)
     if (m_config.icon != DialogIcon::None) {
-        contentWidth += m_iconSize + 16.0f * m_scale;
+        contentWidth += m_iconSize + 16.0f * GetScale();
     }
 
     ImGui::SetNextWindowSize(ImVec2(contentWidth, 0), ImGuiCond_Appearing);
@@ -202,8 +178,8 @@ void ConfirmationDialog::RenderIcon() {
 }
 
 void ConfirmationDialog::RenderMessage() {
-    float scaledMaxWidth = m_config.maxWidth * m_scale;
-    ImGui::PushTextWrapPos(scaledMaxWidth - 80.0f * m_scale);
+    float scaledMaxWidth = m_config.maxWidth * GetScale();
+    ImGui::PushTextWrapPos(scaledMaxWidth - 80.0f * GetScale());
 
     ImGui::Text("%s", m_config.message.c_str());
 
@@ -228,7 +204,7 @@ void ConfirmationDialog::RenderButtons() {
 
     // Calculate right alignment (scaled spacing)
     float buttonWidth = GetButtonWidth();
-    float spacing = BaseSize::BUTTON_SPACING * m_scale;
+    float spacing = BaseSize::BUTTON_SPACING * GetScale();
     float totalWidth = buttonCount * buttonWidth + (buttonCount - 1) * spacing;
     float startX = ImGui::GetContentRegionAvail().x - totalWidth;
 
@@ -278,7 +254,7 @@ void ConfirmationDialog::RenderButtons() {
 float ConfirmationDialog::GetButtonWidth() const {
     // Calculate based on longest button label (with scaled padding)
     float maxWidth = m_buttonWidth;
-    float buttonPadding = 20.0f * m_scale;
+    float buttonPadding = 20.0f * GetScale();
 
     auto CheckLabel = [&](DialogButton btn) {
         if (HasButton(m_config.buttons, btn)) {
