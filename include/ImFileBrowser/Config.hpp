@@ -5,67 +5,60 @@
 #pragma once
 
 #include "imgui.h"
+#include <ImGuiScaling/ImGuiScaling.hpp>
 
 namespace ImFileBrowser {
 
-/**
- * @brief Base size constants for scaling
- *
- * All sizes are defined at 1.0x scale. Multiply by the effective scale
- * factor (dpiScale * userScale) when using.
- */
+// Import common base sizes from ImGuiScaling
 namespace BaseSize {
+    // Common sizes from ImGuiScaling
+    using namespace ImGuiScaling::BaseSize;
+
+    // Backward compatibility / Missing in some versions
+    constexpr float BUTTON_SPACING = ImGuiScaling::BaseSize::SPACING;
+
+    // File browser specific sizes (at 1.0x scale)
     // Dialog dimensions
-    constexpr float DIALOG_WIDTH = 650.0f;
-    constexpr float DIALOG_HEIGHT = 450.0f;
+    constexpr float DIALOG_WIDTH = ImGuiScaling::BaseSize::DIALOG_WIDTH_LARGE;  // 650px
+    constexpr float DIALOG_HEIGHT = ImGuiScaling::BaseSize::DIALOG_HEIGHT_LARGE; // 450px
     constexpr float DIALOG_MIN_WIDTH = 400.0f;
     constexpr float DIALOG_MIN_HEIGHT = 300.0f;
 
-    // Desktop mode sizes
-    constexpr float ROW_HEIGHT = 24.0f;
-    constexpr float BUTTON_HEIGHT = 28.0f;
-    constexpr float BUTTON_WIDTH = 80.0f;
-    constexpr float ICON_SIZE = 18.0f;
-    constexpr float FONT_SIZE = 14.0f;
+    // File browser specific
     constexpr float PATH_BAR_HEIGHT = 32.0f;
-    constexpr float INPUT_HEIGHT = 26.0f;
     constexpr float ICON_BUTTON_WIDTH = 32.0f;
-
-    // Touch mode sizes (larger for finger-friendly targets)
-    constexpr float TOUCH_ROW_HEIGHT = 52.0f;
-    constexpr float TOUCH_BUTTON_HEIGHT = 48.0f;
-    constexpr float TOUCH_BUTTON_WIDTH = 120.0f;
-    constexpr float TOUCH_ICON_SIZE = 28.0f;
-    constexpr float TOUCH_FONT_SIZE = 16.0f;
-    constexpr float TOUCH_PATH_BAR_HEIGHT = 56.0f;
-    constexpr float TOUCH_INPUT_HEIGHT = 48.0f;
-    constexpr float TOUCH_ICON_BUTTON_WIDTH = 100.0f;
 
     // Table column widths
     constexpr float SIZE_COLUMN_WIDTH = 80.0f;
     constexpr float DATE_COLUMN_WIDTH = 120.0f;
-    constexpr float TOUCH_SIZE_COLUMN_WIDTH = 100.0f;
-    constexpr float TOUCH_DATE_COLUMN_WIDTH = 150.0f;
 
     // Confirmation dialog
-    constexpr float CONFIRM_MIN_WIDTH = 300.0f;
+    constexpr float CONFIRM_MIN_WIDTH = ImGuiScaling::BaseSize::DIALOG_MIN_WIDTH;  // 300px
     constexpr float CONFIRM_MAX_WIDTH = 500.0f;
     constexpr float CONFIRM_ICON_SIZE = 32.0f;
-    constexpr float TOUCH_CONFIRM_ICON_SIZE = 48.0f;
 
-    // Spacing
-    constexpr float BUTTON_SPACING = 8.0f;
+    // Combo widths
     constexpr float DRIVES_COMBO_WIDTH = 90.0f;
-    constexpr float TOUCH_DRIVES_COMBO_WIDTH = 130.0f;
     constexpr float SORT_COMBO_WIDTH = 70.0f;
-    constexpr float TOUCH_SORT_COMBO_WIDTH = 100.0f;
     constexpr float POPUP_INPUT_WIDTH = 300.0f;
 
-    // Scrollbar (touch mode uses wider scrollbars)
-    constexpr float SCROLLBAR_WIDTH = 16.0f;
-    constexpr float GRAB_MIN_SIZE = 16.0f;
-    constexpr float TOUCH_SCROLLBAR_WIDTH = 40.0f;
-    constexpr float TOUCH_GRAB_MIN_SIZE = 40.0f;
+    // Touch mode sizes (file browser specific)
+    constexpr float TOUCH_ROW_HEIGHT = ImGuiScaling::BaseSize::Touch::ROW_HEIGHT;  // 52px
+    constexpr float TOUCH_BUTTON_HEIGHT = ImGuiScaling::BaseSize::Touch::BUTTON_HEIGHT;  // 48px
+    constexpr float TOUCH_BUTTON_WIDTH = ImGuiScaling::BaseSize::Touch::BUTTON_WIDTH;  // 120px
+    constexpr float TOUCH_ICON_SIZE = ImGuiScaling::BaseSize::Touch::ICON_SIZE;  // 28px
+    constexpr float TOUCH_FONT_SIZE = ImGuiScaling::BaseSize::Touch::FONT_SIZE;  // 16px
+    constexpr float TOUCH_INPUT_HEIGHT = ImGuiScaling::BaseSize::Touch::INPUT_HEIGHT;  // 48px
+    constexpr float TOUCH_SCROLLBAR_WIDTH = ImGuiScaling::BaseSize::Touch::SCROLLBAR_WIDTH;  // 40px
+    constexpr float TOUCH_GRAB_MIN_SIZE = ImGuiScaling::BaseSize::Touch::GRAB_MIN_SIZE;  // 40px
+
+    constexpr float TOUCH_PATH_BAR_HEIGHT = 56.0f;
+    constexpr float TOUCH_ICON_BUTTON_WIDTH = 100.0f;
+    constexpr float TOUCH_SIZE_COLUMN_WIDTH = 100.0f;
+    constexpr float TOUCH_DATE_COLUMN_WIDTH = 150.0f;
+    constexpr float TOUCH_CONFIRM_ICON_SIZE = 48.0f;
+    constexpr float TOUCH_DRIVES_COMBO_WIDTH = 130.0f;
+    constexpr float TOUCH_SORT_COMBO_WIDTH = 100.0f;
 }
 
 /**
@@ -98,15 +91,15 @@ struct ColorConfig {
  * Touch mode uses larger values for finger-friendly targets.
  */
 struct SizeConfig {
-    float rowHeight = 24.0f;        // Height of file list rows
-    float buttonHeight = 28.0f;     // Height of toolbar/dialog buttons
-    float buttonWidth = 80.0f;      // Width of dialog buttons
-    float inputHeight = 26.0f;      // Height of input fields
-    float pathBarHeight = 32.0f;    // Height of path breadcrumb bar
-    float iconSize = 18.0f;         // Size of file/folder icons
-    float fontSize = 14.0f;         // Base font size
-    float scrollbarWidth = 16.0f;   // Width of scrollbars
-    float grabMinSize = 16.0f;      // Minimum scrollbar grab size
+    float rowHeight = BaseSize::ROW_HEIGHT;
+    float buttonHeight = BaseSize::BUTTON_HEIGHT;
+    float buttonWidth = BaseSize::BUTTON_WIDTH;
+    float inputHeight = BaseSize::INPUT_HEIGHT;
+    float pathBarHeight = BaseSize::PATH_BAR_HEIGHT;
+    float iconSize = BaseSize::ICON_SIZE;
+    float fontSize = BaseSize::FONT_SIZE;
+    float scrollbarWidth = BaseSize::SCROLLBAR_WIDTH;
+    float grabMinSize = BaseSize::GRAB_MIN_SIZE;
 
     /**
      * @brief Get default desktop sizing
@@ -120,15 +113,15 @@ struct SizeConfig {
      */
     static SizeConfig Touch() {
         SizeConfig config;
-        config.rowHeight = 52.0f;
-        config.buttonHeight = 48.0f;
-        config.buttonWidth = 120.0f;
-        config.inputHeight = 48.0f;
-        config.pathBarHeight = 56.0f;
-        config.iconSize = 28.0f;
-        config.fontSize = 16.0f;
-        config.scrollbarWidth = 40.0f;
-        config.grabMinSize = 40.0f;
+        config.rowHeight = BaseSize::TOUCH_ROW_HEIGHT;
+        config.buttonHeight = BaseSize::TOUCH_BUTTON_HEIGHT;
+        config.buttonWidth = BaseSize::TOUCH_BUTTON_WIDTH;
+        config.inputHeight = BaseSize::TOUCH_INPUT_HEIGHT;
+        config.pathBarHeight = BaseSize::TOUCH_PATH_BAR_HEIGHT;
+        config.iconSize = BaseSize::TOUCH_ICON_SIZE;
+        config.fontSize = BaseSize::TOUCH_FONT_SIZE;
+        config.scrollbarWidth = BaseSize::TOUCH_SCROLLBAR_WIDTH;
+        config.grabMinSize = BaseSize::TOUCH_GRAB_MIN_SIZE;
         return config;
     }
 };

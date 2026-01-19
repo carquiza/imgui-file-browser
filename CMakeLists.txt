@@ -47,31 +47,77 @@ target_include_directories(ImFileBrowser PUBLIC
 # =============================================================================
 # ImGui dependency
 # =============================================================================
-# The user must provide imgui. There are several ways:
+# The user must provide imgui. ImGui doesn't ship with a CMakeLists.txt and
+# requires backend configuration, so it cannot be auto-fetched.
 #
 # Option 1: Provide an 'imgui' target (recommended)
-#   add_subdirectory(imgui)  # or FetchContent
+#   # Create imgui target with your chosen backends
 #   add_subdirectory(imgui-file-browser)
 #
 # Option 2: Set IMGUI_INCLUDE_DIR before adding this subdirectory
 #   set(IMGUI_INCLUDE_DIR "/path/to/imgui")
 #   add_subdirectory(imgui-file-browser)
 #
-# Option 3: Link imgui manually after
-#   add_subdirectory(imgui-file-browser)
-#   target_include_directories(ImFileBrowser PUBLIC /path/to/imgui)
+# Option 3: Use vcpkg
+#   vcpkg install imgui[core]:x64-windows
 # =============================================================================
 
 if(TARGET imgui)
     target_link_libraries(ImFileBrowser PUBLIC imgui)
     message(STATUS "ImFileBrowser: Using 'imgui' target")
+elseif(TARGET imgui::imgui)
+    target_link_libraries(ImFileBrowser PUBLIC imgui::imgui)
+    message(STATUS "ImFileBrowser: Using 'imgui::imgui' target (vcpkg)")
 elseif(DEFINED IMGUI_INCLUDE_DIR)
     target_include_directories(ImFileBrowser PUBLIC ${IMGUI_INCLUDE_DIR})
     message(STATUS "ImFileBrowser: Using IMGUI_INCLUDE_DIR=${IMGUI_INCLUDE_DIR}")
 else()
-    message(STATUS "ImFileBrowser: No imgui target or IMGUI_INCLUDE_DIR found.")
-    message(STATUS "  Make sure imgui headers are available when compiling.")
-    message(STATUS "  See README.md for integration options.")
+    message(WARNING "ImFileBrowser: No imgui target or IMGUI_INCLUDE_DIR found.")
+    message(WARNING "  Make sure imgui headers are available when compiling.")
+    message(WARNING "  See README.md for integration options.")
+endif()
+
+# =============================================================================
+# ImGuiScaling dependency
+# =============================================================================
+# ImGuiScaling provides the unified scaling system.
+# https://github.com/carquiza/imgui-scaling
+#
+# The user must provide ImGuiScaling. Options:
+#
+# Option 1: Provide an 'ImGuiScaling' target (recommended)
+#   add_subdirectory(imgui-scaling)
+#   add_subdirectory(imgui-file-browser)
+#
+# Option 2: Set IMGUISCALING_INCLUDE_DIR before adding this subdirectory
+#   set(IMGUISCALING_INCLUDE_DIR "/path/to/imgui-scaling/include")
+#   add_subdirectory(imgui-file-browser)
+# =============================================================================
+
+if(NOT TARGET ImGuiScaling::ImGuiScaling AND NOT TARGET ImGuiScaling AND NOT DEFINED IMGUISCALING_INCLUDE_DIR)
+    message(STATUS "ImFileBrowser: ImGuiScaling not found. Attempting to fetch...")
+    include(FetchContent)
+    FetchContent_Declare(
+        imgui-scaling
+        GIT_REPOSITORY https://github.com/carquiza/imgui-scaling.git
+        GIT_TAG main
+    )
+    FetchContent_MakeAvailable(imgui-scaling)
+endif()
+
+if(TARGET ImGuiScaling::ImGuiScaling)
+    target_link_libraries(ImFileBrowser PUBLIC ImGuiScaling::ImGuiScaling)
+    message(STATUS "ImFileBrowser: Using 'ImGuiScaling::ImGuiScaling' target")
+elseif(TARGET ImGuiScaling)
+    target_link_libraries(ImFileBrowser PUBLIC ImGuiScaling)
+    message(STATUS "ImFileBrowser: Using 'ImGuiScaling' target")
+elseif(DEFINED IMGUISCALING_INCLUDE_DIR)
+    target_include_directories(ImFileBrowser PUBLIC ${IMGUISCALING_INCLUDE_DIR})
+    message(STATUS "ImFileBrowser: Using IMGUISCALING_INCLUDE_DIR=${IMGUISCALING_INCLUDE_DIR}")
+else()
+    message(STATUS "ImFileBrowser: No ImGuiScaling target or IMGUISCALING_INCLUDE_DIR found.")
+    message(STATUS "  Make sure ImGuiScaling headers are available when compiling.")
+    message(STATUS "  See https://github.com/carquiza/imgui-scaling")
 endif()
 
 # =============================================================================
