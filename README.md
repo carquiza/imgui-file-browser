@@ -10,6 +10,7 @@ A standalone, touch-friendly ImGui file browser dialog library.
 - **Cross-Platform**: Windows and Linux support (drive enumeration, filesystem operations)
 - **Configurable**: Colors, sizes, and icons can be customized
 - **FontAwesome Icons**: Optional icon support with text fallbacks
+- **Path Persistence**: Automatically remembers the last used directory via imgui.ini
 
 ## Requirements
 
@@ -137,6 +138,51 @@ ImFileBrowser::SetConfig(config);
 
 // Enable FontAwesome icons (if font is loaded)
 ImFileBrowser::SetIcons(ImFileBrowser::IconSet::FontAwesome());
+```
+
+### Path Persistence (imgui.ini)
+
+ImFileBrowser can automatically save and restore the last browsed directory using ImGui's settings system. This requires registering a settings handler during initialization.
+
+**Important**: The initialization order matters. You must:
+1. Call `ImGui::CreateContext()`
+2. Call `ImFileBrowser::RegisterSettingsHandler()`
+3. Call `ImGui::LoadIniSettingsFromDisk()` to load persisted settings
+
+```cpp
+// During application initialization
+IMGUI_CHECKVERSION();
+ImGui::CreateContext();
+
+// Register settings handler (must be after CreateContext, before LoadIniSettings)
+ImFileBrowser::RegisterSettingsHandler();
+
+// Explicitly load settings after handlers are registered
+ImGui::LoadIniSettingsFromDisk(ImGui::GetIO().IniFilename);
+
+// Continue with rest of ImGui setup...
+ImGui_ImplGlfw_InitForOpenGL(window, true);
+ImGui_ImplOpenGL3_Init(glsl_version);
+```
+
+Once registered, the file browser automatically:
+- Saves the current directory to `imgui.ini` when a file is selected
+- Restores the last used directory when opened (if no `initialPath` is specified)
+
+The settings are stored in a `[ImFileBrowser][Data]` section:
+```ini
+[ImFileBrowser][Data]
+LastPath=C:\Users\Documents\Projects
+```
+
+**Note**: If you specify `config.initialPath` when opening the dialog, it takes priority over the persisted path. Leave `initialPath` empty to use the persisted path:
+
+```cpp
+ImFileBrowser::DialogConfig config;
+config.mode = ImFileBrowser::Mode::Open;
+config.title = "Open File";
+// Don't set config.initialPath - let file browser use persisted path
+browser.Open(config);
 ```
 
 ### Custom Colors
@@ -273,6 +319,8 @@ browser.onFileSelected.connect([](const std::string& path) {
 
 - `GetConfig()` / `SetConfig()` - Access global configuration
 - `GetIcons()` / `SetIcons()` - Access global icon set
+- `GetLastPath()` / `SetLastPath()` - Access persisted last browsed path
+- `RegisterSettingsHandler()` - Register ImGui settings handler for path persistence
 - `MakeSaveChangesConfig()` - Create save changes dialog config
 - `MakeOverwriteConfig()` - Create overwrite confirmation config
 - `MakeErrorConfig()` - Create error message config
