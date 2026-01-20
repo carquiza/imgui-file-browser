@@ -7,6 +7,7 @@
 #include "ImFileBrowser/Icons.hpp"
 #include "imgui.h"
 #include <algorithm>
+#include <cctype>
 #include <cfloat>
 #include <cstring>
 #include <cstdio>
@@ -32,6 +33,7 @@ void FileBrowserDialog::Open(const DialogConfig& config) {
     m_showNewFolderPopup = false;
     m_showOverwriteConfirm = false;
     m_pendingActivateIndex = -1;
+    m_pendingScrollToIndex = -1;
 
     // Apply scale from config
     SetScale((config.scale > 0.0f) ? config.scale : 1.0f);
@@ -394,6 +396,13 @@ void FileBrowserDialog::RenderFileList() {
         ImGui::TableSetupScrollFreeze(0, 1);  // Freeze header row
         ImGui::TableHeadersRow();
 
+        // Handle pending scroll from incremental search - must be inside table context
+        if (m_pendingScrollToIndex >= 0 && m_pendingScrollToIndex < static_cast<int>(m_entries.size())) {
+            float targetY = m_pendingScrollToIndex * m_rowHeight;
+            ImGui::SetScrollY(targetY);
+            m_pendingScrollToIndex = -1;
+        }
+
         ImGuiListClipper clipper;
         clipper.Begin(static_cast<int>(m_entries.size()), m_rowHeight);
 
@@ -498,12 +507,18 @@ void FileBrowserDialog::RenderFilenameInput() {
     ImGui::SetNextItemWidth(-1);
     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(8, (m_inputHeight - m_fontSize) / 2));
 
-    ImGuiInputTextFlags flags = 0;
-    if (m_config.mode == Mode::Open) {
-        flags |= ImGuiInputTextFlags_ReadOnly;
+    // In Open mode, typing performs incremental search (jump to matching entry)
+    // In Save mode, typing sets the filename to save as
+    if (ImGui::InputText("##filename", m_filenameBuffer, sizeof(m_filenameBuffer))) {
+        // Text changed - perform incremental search in Open mode
+        if (m_config.mode == Mode::Open && strlen(m_filenameBuffer) > 0) {
+            int matchIndex = FindMatchingEntryIndex(m_filenameBuffer);
+            if (matchIndex >= 0) {
+                m_selectedIndex = matchIndex;
+                m_pendingScrollToIndex = matchIndex;
+            }
+        }
     }
-
-    ImGui::InputText("##filename", m_filenameBuffer, sizeof(m_filenameBuffer), flags);
 
     ImGui::PopStyleVar();
 }
@@ -828,6 +843,34 @@ void FileBrowserDialog::NotifyCancelled() {
     if (m_onCancelled) {
         m_onCancelled();
     }
+}
+
+int FileBrowserDialog::FindMatchingEntryIndex(const char* prefix) const {
+    if (!prefix || prefix[0] == '\0') {
+        return -1;
+    }
+
+    size_t prefixLen = strlen(prefix);
+
+    // Find first entry that starts with prefix (case-insensitive)
+    for (size_t i = 0; i < m_entries.size(); ++i) {
+        const auto& entry = m_entries[i];
+        if (entry.name.length() >= prefixLen) {
+            bool match = true;
+            for (size_t j = 0; j < prefixLen && match; ++j) {
+                char c1 = static_cast<char>(tolower(static_cast<unsigned char>(entry.name[j])));
+                char c2 = static_cast<char>(tolower(static_cast<unsigned char>(prefix[j])));
+                if (c1 != c2) {
+                    match = false;
+                }
+            }
+            if (match) {
+                return static_cast<int>(i);
+            }
+        }
+    }
+
+    return -1;
 }
 
 } // namespace ImFileBrowser

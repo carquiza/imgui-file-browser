@@ -34,13 +34,14 @@ echo === Configuring with CMake ===
 cd "%BUILD_DIR%"
 
 cmake ..\test -G "Visual Studio 17 2022" -A x64 -DCMAKE_TOOLCHAIN_FILE="%TOOLCHAIN_FILE%"
+
 if errorlevel 1 (
     echo.
     echo CMake configuration failed!
     echo.
     echo Make sure you have:
-    echo   1. GLFW installed (vcpkg install glfw3:x64-windows)
-    echo   2. ImGui available (vcpkg install imgui[glfw-binding,opengl3-binding]:x64-windows)
+    echo   1. GLFW installed, vcpkg install glfw3:x64-windows
+    echo   2. ImGui available, vcpkg install imgui[glfw-binding,opengl3-binding]:x64-windows
     echo.
     cd ..
     exit /b 1
@@ -56,6 +57,8 @@ if errorlevel 1 (
     cd ..
     exit /b 1
 )
+
+echo is it done
 
 cd ..
 

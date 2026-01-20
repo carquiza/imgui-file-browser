@@ -162,6 +162,7 @@ private:
     void UpdateSizing();
     void NotifyFileSelected(const std::string& path);
     void NotifyCancelled();
+    int FindMatchingEntryIndex(const char* prefix) const;
 
     // ==================== State ====================
 
@@ -188,6 +189,7 @@ private:
 
     // Deferred action (to avoid modifying entries during table iteration)
     int m_pendingActivateIndex = -1;
+    int m_pendingScrollToIndex = -1;  // For incremental search scrolling
 
     // Drives/roots (cached)
     std::vector<std::string> m_drives;
