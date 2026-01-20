@@ -60,6 +60,7 @@ void FileBrowserDialog::Open(const DialogConfig& config) {
     }
 
     m_newFolderBuffer[0] = '\0';
+    m_filenameInputActive = false;
 
     // Refresh drives
     m_drives = FileSystemHelper::GetDrives();
@@ -389,8 +390,10 @@ void FileBrowserDialog::RenderFileList() {
     }
 
     // Table for file list
+    // NoSavedSettings prevents persisted column widths from causing layout instability
     ImGuiTableFlags tableFlags = ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersInnerV |
-                                 ImGuiTableFlags_ScrollY | ImGuiTableFlags_Resizable;
+                                 ImGuiTableFlags_ScrollY | ImGuiTableFlags_Resizable |
+                                 ImGuiTableFlags_NoSavedSettings;
 
     if (ImGui::BeginTable("Files", 3, tableFlags)) {
         // Column widths (scaled)
@@ -407,21 +410,26 @@ void FileBrowserDialog::RenderFileList() {
         ImGui::TableSetupScrollFreeze(0, 1);  // Freeze header row
         ImGui::TableHeadersRow();
 
+        // Use floored row height to ensure consistent calculations
+        // Floating-point precision issues can cause the clipper to oscillate between
+        // showing different rows each frame (hysteresis)
+        float rowHeight = floorf(m_rowHeight);
+
         // Handle pending scroll from incremental search - must be inside table context
         if (m_pendingScrollToIndex >= 0 && m_pendingScrollToIndex < static_cast<int>(m_entries.size())) {
-            float targetY = m_pendingScrollToIndex * m_rowHeight;
+            float targetY = m_pendingScrollToIndex * rowHeight;
             ImGui::SetScrollY(targetY);
             m_pendingScrollToIndex = -1;
         }
 
         ImGuiListClipper clipper;
-        clipper.Begin(static_cast<int>(m_entries.size()), m_rowHeight);
+        clipper.Begin(static_cast<int>(m_entries.size()), rowHeight);
 
         while (clipper.Step()) {
             for (int row = clipper.DisplayStart; row < clipper.DisplayEnd; ++row) {
                 const auto& entry = m_entries[row];
 
-                ImGui::TableNextRow(0, m_rowHeight);
+                ImGui::TableNextRow(0, rowHeight);
 
                 // Name column
                 ImGui::TableNextColumn();
@@ -438,7 +446,7 @@ void FileBrowserDialog::RenderFileList() {
                     selectFlags |= ImGuiSelectableFlags_AllowDoubleClick;
                 }
 
-                if (ImGui::Selectable("##row", isSelected, selectFlags, ImVec2(0, m_rowHeight)))
+                if (ImGui::Selectable("##row", isSelected, selectFlags, ImVec2(0, rowHeight)))
                 {
                     SelectEntry(row);
 
@@ -518,6 +526,12 @@ void FileBrowserDialog::RenderFilenameInput() {
     ImGui::SetNextItemWidth(-1);
     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(8, (m_inputHeight - m_fontSize) / 2));
 
+    // Restore focus to filename input if it was active and user hasn't clicked elsewhere
+    // This allows typing to continue even when mouse hovers over file list
+    if (m_filenameInputActive && !ImGui::IsMouseClicked(0)) {
+        ImGui::SetKeyboardFocusHere();
+    }
+
     // In Open mode, typing performs incremental search (jump to matching entry)
     // In Save mode, typing sets the filename to save as
     if (ImGui::InputText("##filename", m_filenameBuffer, sizeof(m_filenameBuffer))) {
@@ -530,6 +544,9 @@ void FileBrowserDialog::RenderFilenameInput() {
             }
         }
     }
+
+    // Track whether the input currently has keyboard focus
+    m_filenameInputActive = ImGui::IsItemActive();
 
     ImGui::PopStyleVar();
 }

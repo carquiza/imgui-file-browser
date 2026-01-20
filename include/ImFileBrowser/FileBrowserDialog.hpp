@@ -181,6 +181,7 @@ private:
     // Input state
     char m_filenameBuffer[256] = {0};
     char m_newFolderBuffer[256] = {0};
+    bool m_filenameInputActive = false;  // Track if filename input has focus
 
     // Popup state
     bool m_showNewFolderPopup = false;
