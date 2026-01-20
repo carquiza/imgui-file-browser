@@ -38,11 +38,17 @@ void FileBrowserDialog::Open(const DialogConfig& config) {
     // Apply scale from config
     SetScale((config.scale > 0.0f) ? config.scale : 1.0f);
 
-    // Set initial path
+    // Set initial path (priority: config.initialPath > persisted lastPath > documents)
     if (!config.initialPath.empty() && FileSystemHelper::IsDirectory(config.initialPath)) {
         m_currentPath = config.initialPath;
     } else {
-        m_currentPath = FileSystemHelper::GetDocumentsDirectory();
+        // Try persisted last path (safely - it may no longer exist)
+        const std::string& lastPath = GetLastPath();
+        if (!lastPath.empty() && FileSystemHelper::IsDirectory(lastPath)) {
+            m_currentPath = lastPath;
+        } else {
+            m_currentPath = FileSystemHelper::GetDocumentsDirectory();
+        }
     }
 
     // Set initial filename
@@ -601,6 +607,7 @@ void FileBrowserDialog::RenderButtons() {
                 m_selectedPath = fullPath;
                 m_result = Result::Selected;
                 m_isOpen = false;
+                SetLastPath(m_currentPath);  // Persist for next time
                 NotifyFileSelected(m_selectedPath);
             }
         }
@@ -681,6 +688,7 @@ void FileBrowserDialog::RenderOverwriteConfirmPopup() {
             m_isOpen = false;
             m_showOverwriteConfirm = false;
             ImGui::CloseCurrentPopup();
+            SetLastPath(m_currentPath);  // Persist for next time
             NotifyFileSelected(m_selectedPath);
         }
 
@@ -761,6 +769,7 @@ void FileBrowserDialog::ActivateEntry(int index) {
             m_selectedPath = entry.path;
             m_result = Result::Selected;
             m_isOpen = false;
+            SetLastPath(m_currentPath);  // Persist for next time
             NotifyFileSelected(m_selectedPath);
         }
     }

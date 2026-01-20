@@ -6,6 +6,7 @@
 
 #include "imgui.h"
 #include <ImGuiScaling/ImGuiScaling.hpp>
+#include <string>
 
 namespace ImFileBrowser {
 
@@ -163,5 +164,32 @@ LibraryConfig& GetConfig();
  * @param config New configuration to use
  */
 void SetConfig(const LibraryConfig& config);
+
+/**
+ * @brief Get the last browsed path (persisted to imgui.ini)
+ * @return Last path, or empty string if none saved
+ */
+const std::string& GetLastPath();
+
+/**
+ * @brief Set the last browsed path (will be persisted to imgui.ini)
+ * @param path Path to save
+ */
+void SetLastPath(const std::string& path);
+
+/**
+ * @brief Register ImGui settings handler for persistence
+ *
+ * Call this once after ImGui::CreateContext() to enable automatic
+ * saving/loading of the last browsed path to imgui.ini.
+ *
+ * Usage:
+ * @code
+ * ImGui::CreateContext();
+ * ImFileBrowser::RegisterSettingsHandler();
+ * // ... rest of initialization
+ * @endcode
+ */
+void RegisterSettingsHandler();
 
 } // namespace ImFileBrowser
