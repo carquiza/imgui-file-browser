@@ -363,6 +363,11 @@ void FileBrowserDialog::RenderFileList() {
     ImGui::PushStyleColor(ImGuiCol_ChildBg, colors.listBackground);
     ImGui::PushStyleColor(ImGuiCol_Border, colors.listBorder);
 
+    // Apply selection/hover colors from config (used by ImGui::Selectable)
+    ImGui::PushStyleColor(ImGuiCol_Header, colors.selectedRow);
+    ImGui::PushStyleColor(ImGuiCol_HeaderHovered, colors.hoveredRow);
+    ImGui::PushStyleColor(ImGuiCol_HeaderActive, colors.selectedRow);
+
     // Touch mode: widen scrollbar for fat fingers (scaled)
     if (m_config.touchMode) {
         ImGui::PushStyleVar(ImGuiStyleVar_ScrollbarSize, BaseSize::TOUCH_SCROLLBAR_WIDTH * GetScale());
@@ -488,8 +493,8 @@ void FileBrowserDialog::RenderFileList() {
         ImGui::PopStyleVar(2);  // ScrollbarSize, GrabMinSize
     }
 
-    // Pop file list background colors
-    ImGui::PopStyleColor(2);  // ChildBg, Border
+    // Pop file list style colors
+    ImGui::PopStyleColor(5);  // ChildBg, Border, Header, HeaderHovered, HeaderActive
 
     // Process deferred activation AFTER table iteration is complete
     if (m_pendingActivateIndex >= 0) {
