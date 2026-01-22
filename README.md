@@ -56,6 +56,76 @@ add_subdirectory(imgui-file-browser)
 target_link_libraries(YourApp PRIVATE ImFileBrowser::ImFileBrowser)
 ```
 
+### Option 4: vcpkg (Overlay Ports)
+
+For vcpkg integration with caching support, use overlay ports. Two port sets are provided:
+
+- **`vcpkg-ports/`** - Production ports that fetch from GitHub releases
+- **`vcpkg-ports-dev/`** - Development ports that use local source directories
+
+#### Production Setup (GitHub releases)
+
+1. Copy `vcpkg-ports` to your project
+
+2. Configure in `vcpkg-configuration.json`:
+```json
+{
+  "overlay-ports": ["./vcpkg-ports"]
+}
+```
+
+#### Development Setup (Local sources)
+
+For active development, use `vcpkg-ports-dev` which references local directories via environment variables:
+
+1. Set environment variables pointing to your local checkouts:
+```bash
+# Windows
+set IMGUISCALING_SOURCE_PATH=<path-to-imgui-scaling>
+set IMFILEBROWSER_SOURCE_PATH=<path-to-imgui-file-browser>
+
+# Linux/macOS
+export IMGUISCALING_SOURCE_PATH=/home/user/src/imgui-scaling
+export IMFILEBROWSER_SOURCE_PATH=/home/user/src/imgui-file-browser
+```
+
+2. Copy `vcpkg-ports-dev` to your project (or reference it directly)
+
+3. Configure in `vcpkg-configuration.json`:
+```json
+{
+  "overlay-ports": ["./vcpkg-ports-dev"]
+}
+```
+
+When ready to release, simply switch to the production ports - your CMakeLists.txt doesn't need to change.
+
+#### Using in Your Project
+
+Add to your `vcpkg.json`:
+```json
+{
+  "dependencies": [
+    "imfilebrowser",
+    {
+      "name": "imgui",
+      "features": ["glfw-binding", "opengl3-binding"]
+    }
+  ]
+}
+```
+
+Use in CMake:
+```cmake
+find_package(ImFileBrowser CONFIG REQUIRED)
+target_link_libraries(YourApp PRIVATE ImFileBrowser::ImFileBrowser)
+```
+
+**Tip:** To force vcpkg to rebuild after local changes, delete the package from the cache:
+```bash
+vcpkg remove imfilebrowser imguiscaling
+```
+
 ## ImGui Dependency
 
 ImFileBrowser requires ImGui but doesn't fetch it (you likely have your own setup).

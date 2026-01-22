@@ -1,0 +1,27 @@
+{
+  "name": "imfilebrowser",
+  "version": "0.1.0",
+  "description": "A standalone, touch-friendly ImGui file browser dialog library",
+  "homepage": "https://github.com/carquiza/imgui-file-browser",
+  "license": "MIT",
+  "dependencies": [
+    "imgui",
+    "imguiscaling",
+    {
+      "name": "vcpkg-cmake",
+      "host": true
+    },
+    {
+      "name": "vcpkg-cmake-config",
+      "host": true
+    }
+  ],
+  "features": {
+    "signals": {
+      "description": "Enable sigslot signal support",
+      "dependencies": [
+        "sigslot"
+      ]
+    }
+  }
+}

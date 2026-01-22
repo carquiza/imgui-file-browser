@@ -146,3 +146,64 @@ set_target_properties(ImFileBrowser PROPERTIES FOLDER "Libraries")
 # Source groups for Visual Studio
 source_group("Header Files" FILES ${IMFILEBROWSER_HEADERS})
 source_group("Source Files" FILES ${IMFILEBROWSER_SOURCES})
+
+# =============================================================================
+# Installation rules (for vcpkg and find_package support)
+# =============================================================================
+# Only include install rules when built as a standalone project or via vcpkg,
+# not when included as a subdirectory via add_subdirectory/FetchContent.
+
+# Check if we're the top-level project (CMake 3.21+ provides PROJECT_IS_TOP_LEVEL)
+if(CMAKE_VERSION VERSION_LESS "3.21")
+    get_directory_property(_has_parent PARENT_DIRECTORY)
+    if(_has_parent)
+        set(PROJECT_IS_TOP_LEVEL OFF)
+    else()
+        set(PROJECT_IS_TOP_LEVEL ON)
+    endif()
+endif()
+
+if(PROJECT_IS_TOP_LEVEL OR IMFILEBROWSER_INSTALL)
+    include(GNUInstallDirs)
+    include(CMakePackageConfigHelpers)
+
+    # Install the library
+    install(TARGETS ImFileBrowser
+        EXPORT ImFileBrowserTargets
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+        INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+    )
+
+    # Install headers
+    install(DIRECTORY include/ImFileBrowser
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+        FILES_MATCHING PATTERN "*.hpp"
+    )
+
+    # Create and install CMake config files
+    write_basic_package_version_file(
+        "${CMAKE_CURRENT_BINARY_DIR}/ImFileBrowserConfigVersion.cmake"
+        VERSION ${PROJECT_VERSION}
+        COMPATIBILITY SameMajorVersion
+    )
+
+    configure_package_config_file(
+        "${CMAKE_CURRENT_SOURCE_DIR}/cmake/ImFileBrowserConfig.cmake.in"
+        "${CMAKE_CURRENT_BINARY_DIR}/ImFileBrowserConfig.cmake"
+        INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/ImFileBrowser
+    )
+
+    install(EXPORT ImFileBrowserTargets
+        FILE ImFileBrowserTargets.cmake
+        NAMESPACE ImFileBrowser::
+        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/ImFileBrowser
+    )
+
+    install(FILES
+        "${CMAKE_CURRENT_BINARY_DIR}/ImFileBrowserConfig.cmake"
+        "${CMAKE_CURRENT_BINARY_DIR}/ImFileBrowserConfigVersion.cmake"
+        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/ImFileBrowser
+    )
+endif()

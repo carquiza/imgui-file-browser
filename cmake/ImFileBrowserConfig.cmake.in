@@ -1,0 +1,18 @@
+@PACKAGE_INIT@
+
+include(CMakeFindDependencyMacro)
+
+# ImFileBrowser requires imgui
+# The user should have imgui available via find_package or as a target
+if(NOT TARGET imgui AND NOT TARGET imgui::imgui)
+    find_dependency(imgui CONFIG)
+endif()
+
+# ImFileBrowser requires ImGuiScaling
+if(NOT TARGET ImGuiScaling::ImGuiScaling AND NOT TARGET ImGuiScaling)
+    find_dependency(ImGuiScaling CONFIG)
+endif()
+
+include("${CMAKE_CURRENT_LIST_DIR}/ImFileBrowserTargets.cmake")
+
+check_required_components(ImFileBrowser)
