@@ -62,6 +62,9 @@ target_include_directories(ImFileBrowser PUBLIC
 #   vcpkg install imgui[core]:x64-windows
 # =============================================================================
 
+# Try to find imgui via find_package (vcpkg provides this)
+find_package(imgui CONFIG QUIET)
+
 if(TARGET imgui)
     target_link_libraries(ImFileBrowser PUBLIC imgui)
     message(STATUS "ImFileBrowser: Using 'imgui' target")
@@ -92,7 +95,13 @@ endif()
 # Option 2: Set IMGUISCALING_INCLUDE_DIR before adding this subdirectory
 #   set(IMGUISCALING_INCLUDE_DIR "/path/to/imgui-scaling/include")
 #   add_subdirectory(imgui-file-browser)
+#
+# Option 3: Use vcpkg
+#   vcpkg install imguiscaling:x64-windows
 # =============================================================================
+
+# Try to find ImGuiScaling via find_package (vcpkg provides this)
+find_package(ImGuiScaling CONFIG QUIET)
 
 if(NOT TARGET ImGuiScaling::ImGuiScaling AND NOT TARGET ImGuiScaling AND NOT DEFINED IMGUISCALING_INCLUDE_DIR)
     message(STATUS "ImFileBrowser: ImGuiScaling not found. Attempting to fetch...")
@@ -124,6 +133,9 @@ endif()
 # Optional sigslot support
 # =============================================================================
 if(IMFILEBROWSER_ENABLE_SIGNALS)
+    # Try to find sigslot via find_package (vcpkg provides this as PalSigslot)
+    find_package(PalSigslot CONFIG QUIET)
+
     if(TARGET Pal::Sigslot)
         target_link_libraries(ImFileBrowser PUBLIC Pal::Sigslot)
         target_compile_definitions(ImFileBrowser PUBLIC IMFILEBROWSER_USE_SIGSLOT)

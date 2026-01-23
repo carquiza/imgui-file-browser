@@ -15,7 +15,7 @@
     "signals": {
       "description": "Enable sigslot signal support",
       "dependencies": [
-        "sigslot"
+        "palsigslot"
       ]
     }
   }
