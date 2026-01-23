@@ -58,51 +58,20 @@ target_link_libraries(YourApp PRIVATE ImFileBrowser::ImFileBrowser)
 
 ### Option 4: vcpkg (Overlay Ports)
 
-For vcpkg integration with caching support, use overlay ports. Two port sets are provided:
+For vcpkg integration, use overlay ports via the `VCPKG_OVERLAY_PORTS` environment variable. This library depends on [imgui-scaling](https://github.com/carquiza/imgui-scaling), so your overlay ports registry must include both packages.
 
-- **`vcpkg-ports/`** - Production ports that fetch from GitHub releases
-- **`vcpkg-ports-dev/`** - Development ports that use local source directories
+#### Setup
 
-#### Production Setup (GitHub releases)
-
-1. Copy `vcpkg-ports` to your project
-
-2. Configure in `vcpkg-configuration.json`:
-```json
-{
-  "overlay-ports": ["./vcpkg-ports"]
-}
-```
-
-#### Development Setup (Local sources)
-
-For active development, use `vcpkg-ports-dev` which references local directories via environment variables:
-
-1. Set environment variables pointing to your local checkouts:
+1. Set the `VCPKG_OVERLAY_PORTS` environment variable to your overlay ports registry:
 ```bash
 # Windows
-set IMGUISCALING_SOURCE_PATH=<path-to-imgui-scaling>
-set IMFILEBROWSER_SOURCE_PATH=<path-to-imgui-file-browser>
+set VCPKG_OVERLAY_PORTS=C:\path\to\your\vcpkg-ports
 
 # Linux/macOS
-export IMGUISCALING_SOURCE_PATH=/home/user/src/imgui-scaling
-export IMFILEBROWSER_SOURCE_PATH=/home/user/src/imgui-file-browser
+export VCPKG_OVERLAY_PORTS=/path/to/your/vcpkg-ports
 ```
 
-2. Copy `vcpkg-ports-dev` to your project (or reference it directly)
-
-3. Configure in `vcpkg-configuration.json`:
-```json
-{
-  "overlay-ports": ["./vcpkg-ports-dev"]
-}
-```
-
-When ready to release, simply switch to the production ports - your CMakeLists.txt doesn't need to change.
-
-#### Using in Your Project
-
-Add to your `vcpkg.json`:
+2. Add to your `vcpkg.json`:
 ```json
 {
   "dependencies": [
@@ -115,16 +84,13 @@ Add to your `vcpkg.json`:
 }
 ```
 
-Use in CMake:
+3. Use in CMake:
 ```cmake
 find_package(ImFileBrowser CONFIG REQUIRED)
 target_link_libraries(YourApp PRIVATE ImFileBrowser::ImFileBrowser)
 ```
 
-**Tip:** To force vcpkg to rebuild after local changes, delete the package from the cache:
-```bash
-vcpkg remove imfilebrowser imguiscaling
-```
+The overlay ports registry should contain port definitions for `imfilebrowser` and `imguiscaling`.
 
 ## ImGui Dependency
 

@@ -64,11 +64,15 @@ endif()
 
 message(STATUS "ImGui include dir: ${IMGUI_INCLUDE_DIR}")
 
-# Add ImGuiScaling (required by ImFileBrowser)
+# Try to find ImGuiScaling via vcpkg (required by ImFileBrowser)
 # https://github.com/carquiza/imgui-scaling
-# ImGuiScaling will be fetched automatically by ImFileBrowser if not found
+# If not found, ImFileBrowser will fetch it automatically from GitHub
+find_package(ImGuiScaling CONFIG QUIET)
+if(ImGuiScaling_FOUND)
+    message(STATUS "Found ImGuiScaling via vcpkg")
+endif()
 
-# Add parent directory for ImFileBrowser (it will use IMGUI_INCLUDE_DIR and ImGuiScaling)
+# Add parent directory for ImFileBrowser
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/.. ${CMAKE_CURRENT_BINARY_DIR}/ImFileBrowser)
 
 # Create test executable
