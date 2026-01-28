@@ -1,5 +1,5 @@
 {
-  "name": "imfilebrowser",
+  "name": "imgui-file-browser",
   "version": "0.1.0",
   "description": "A standalone, touch-friendly ImGui file browser dialog library",
   "homepage": "https://github.com/carquiza/imgui-file-browser",
@@ -7,7 +7,7 @@
   "dependencies": [
     "imgui",
     {
-      "name": "imguiscaling",
+      "name": "imgui-scaling",
       "version>=": "0.1.0"
     }
   ],
