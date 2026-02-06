@@ -31,8 +31,10 @@ void ConfirmationDialog::Show(const ConfirmationConfig& config) {
     m_result = DialogResult::None;
     m_shouldOpen = true;
 
-    // Apply scale from config
-    SetScale((config.scale > 0.0f) ? config.scale : 1.0f);
+    // Apply scale from config (0 = keep current scale set via SetScale())
+    if (config.scale > 0.0f) {
+        SetScale(config.scale);
+    }
 
     // Update sizing based on mode and scale
     OnScaleChanged(); // Ensure sizes are updated for the new mode if scale didn't change

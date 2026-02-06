@@ -29,7 +29,7 @@ struct ConfirmationConfig {
     bool touchMode = false;
     float minWidth = 300.0f;
     float maxWidth = 500.0f;
-    float scale = 1.0f;                     // UI scale factor (dpi * user scale)
+    float scale = 0.0f;                     // UI scale factor (0 = keep current, >0 = override)
 };
 
 /**

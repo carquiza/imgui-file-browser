@@ -32,7 +32,7 @@ struct DialogConfig {
     bool showHiddenFiles = false;           // Show hidden files/folders
     bool allowCreateFolder = true;          // Show "New Folder" button
     bool touchMode = false;                 // Use touch-optimized sizing
-    float scale = 1.0f;                     // UI scale factor (dpi * user scale)
+    float scale = 0.0f;                     // UI scale factor (0 = keep current, >0 = override)
 };
 
 /**

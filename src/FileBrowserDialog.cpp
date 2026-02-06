@@ -36,8 +36,10 @@ void FileBrowserDialog::Open(const DialogConfig& config) {
     m_pendingActivateIndex = -1;
     m_pendingScrollToIndex = -1;
 
-    // Apply scale from config
-    SetScale((config.scale > 0.0f) ? config.scale : 1.0f);
+    // Apply scale from config (0 = keep current scale set via SetScale())
+    if (config.scale > 0.0f) {
+        SetScale(config.scale);
+    }
 
     // Set initial path (priority: config.initialPath > persisted lastPath > documents)
     if (!config.initialPath.empty() && FileSystemHelper::IsDirectory(config.initialPath)) {

@@ -1,6 +1,6 @@
 {
   "name": "imgui-file-browser",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "A standalone, touch-friendly ImGui file browser dialog library",
   "homepage": "https://github.com/carquiza/imgui-file-browser",
   "license": "MIT",
