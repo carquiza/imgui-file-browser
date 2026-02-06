@@ -139,8 +139,7 @@ private:
     void RenderToolbar();
     void RenderPathBar();
     void RenderFileList();
-    void RenderFilenameInput();
-    void RenderFilterSelector();
+    void RenderFilenameAndFilter();
     void RenderButtons();
     void RenderNewFolderPopup();
     void RenderOverwriteConfirmPopup();

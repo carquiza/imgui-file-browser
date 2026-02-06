@@ -149,8 +149,8 @@ Result FileBrowserDialog::Render() {
     // Window flags
     ImGuiWindowFlags flags = ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoScrollbar;
     if (m_config.touchMode) {
-        // Fullscreen: no moving, no resizing, no title bar clutter
-        flags |= ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize;
+        // Fullscreen: no moving, no resizing, no scrolling the outer window
+        flags |= ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollWithMouse;
     }
     if (m_showNewFolderPopup || m_showOverwriteConfirm) {
         flags |= ImGuiWindowFlags_NoInputs;  // Block input while popup is open
@@ -166,8 +166,7 @@ Result FileBrowserDialog::Render() {
             RenderFileList();
 
             if (m_config.mode != Mode::SelectFolder) {
-                RenderFilenameInput();
-                RenderFilterSelector();
+                RenderFilenameAndFilter();
             }
 
             RenderButtons();
@@ -359,12 +358,14 @@ void FileBrowserDialog::RenderFileList() {
     const auto& colors = GetConfig().colors;
     const auto& icons = GetIcons();
 
-    // Calculate available height for file list (with scaled spacing)
-    float spacing = BaseSize::BUTTON_SPACING * GetScale();
-    float reservedHeight = m_buttonHeight + 20.0f * GetScale();  // Buttons row
+    // Calculate available height for file list using actual ImGui style metrics
+    // so the reserved space exactly matches what RenderFilenameAndFilter
+    // + RenderButtons will consume (separator, item spacing, frame padding, etc.)
+    const float itemSpacing = ImGui::GetStyle().ItemSpacing.y;
+    const float separatorHeight = itemSpacing * 2 + 1.0f;  // Separator: spacing above + 1px line + spacing below
+    float reservedHeight = separatorHeight + m_buttonHeight + itemSpacing;  // Separator + buttons + bottom pad
     if (m_config.mode != Mode::SelectFolder) {
-        reservedHeight += m_inputHeight + spacing;   // Filename input
-        reservedHeight += m_inputHeight + spacing;   // Filter selector
+        reservedHeight += m_inputHeight + itemSpacing;   // Filename + filter (single row)
     }
 
     float listHeight = ImGui::GetContentRegionAvail().y - reservedHeight;
@@ -521,24 +522,46 @@ void FileBrowserDialog::RenderFileList() {
     }
 }
 
-void FileBrowserDialog::RenderFilenameInput() {
+void FileBrowserDialog::RenderFilenameAndFilter() {
+    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(8, (m_inputHeight - m_fontSize) / 2));
+
+    // Measure label widths and filter combo width
+    float labelWidth = ImGui::CalcTextSize("File name:").x;
+    float filterComboWidth = 0.0f;
+    float filterLabelWidth = 0.0f;
+    bool hasFilters = !m_config.filters.empty();
+
+    if (hasFilters) {
+        filterLabelWidth = ImGui::CalcTextSize("Type:").x;
+        // Size the filter combo from the longest filter string
+        for (const auto& f : m_config.filters) {
+            float w = ImGui::CalcTextSize(f.ToDisplayString().c_str()).x;
+            filterComboWidth = (std::max)(filterComboWidth, w);
+        }
+        // Add padding for the combo dropdown arrow and frame
+        filterComboWidth += ImGui::GetFrameHeight() + ImGui::GetStyle().FramePadding.x * 4;
+    }
+
+    // Layout: [File name:] [====input====] [Type:] [==combo==]
+    float spacing = ImGui::GetStyle().ItemSpacing.x;
+    float availWidth = ImGui::GetContentRegionAvail().x;
+    float filterTotalWidth = hasFilters ? (filterLabelWidth + spacing + filterComboWidth) : 0.0f;
+    float inputWidth = availWidth - labelWidth - spacing - filterTotalWidth - (hasFilters ? spacing : 0.0f);
+    if (inputWidth < 100.0f) inputWidth = 100.0f;
+
+    // Filename label + input
     ImGui::AlignTextToFramePadding();
     ImGui::Text("File name:");
     ImGui::SameLine();
 
-    ImGui::SetNextItemWidth(-1);
-    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(8, (m_inputHeight - m_fontSize) / 2));
+    ImGui::SetNextItemWidth(inputWidth);
 
     // Restore focus to filename input if it was active and user hasn't clicked elsewhere
-    // This allows typing to continue even when mouse hovers over file list
     if (m_filenameInputActive && !ImGui::IsMouseClicked(0)) {
         ImGui::SetKeyboardFocusHere();
     }
 
-    // In Open mode, typing performs incremental search (jump to matching entry)
-    // In Save mode, typing sets the filename to save as
     if (ImGui::InputText("##filename", m_filenameBuffer, sizeof(m_filenameBuffer))) {
-        // Text changed - perform incremental search in Open mode
         if (m_config.mode == Mode::Open && strlen(m_filenameBuffer) > 0) {
             int matchIndex = FindMatchingEntryIndex(m_filenameBuffer);
             if (matchIndex >= 0) {
@@ -547,38 +570,30 @@ void FileBrowserDialog::RenderFilenameInput() {
             }
         }
     }
-
-    // Track whether the input currently has keyboard focus
     m_filenameInputActive = ImGui::IsItemActive();
 
-    ImGui::PopStyleVar();
-}
+    // Filter combo on the same line
+    if (hasFilters) {
+        ImGui::SameLine();
+        ImGui::AlignTextToFramePadding();
+        ImGui::Text("Type:");
+        ImGui::SameLine();
 
-void FileBrowserDialog::RenderFilterSelector() {
-    if (m_config.filters.empty()) {
-        return;
-    }
-
-    ImGui::AlignTextToFramePadding();
-    ImGui::Text("File type:");
-    ImGui::SameLine();
-
-    ImGui::SetNextItemWidth(-1);
-    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(8, (m_inputHeight - m_fontSize) / 2));
-
-    std::string currentFilter = m_config.filters[m_selectedFilterIndex].ToDisplayString();
-    if (ImGui::BeginCombo("##filter", currentFilter.c_str())) {
-        for (size_t i = 0; i < m_config.filters.size(); ++i) {
-            bool isSelected = (static_cast<int>(i) == m_selectedFilterIndex);
-            if (ImGui::Selectable(m_config.filters[i].ToDisplayString().c_str(), isSelected)) {
-                m_selectedFilterIndex = static_cast<int>(i);
-                RefreshDirectory();
+        ImGui::SetNextItemWidth(filterComboWidth);
+        std::string currentFilter = m_config.filters[m_selectedFilterIndex].ToDisplayString();
+        if (ImGui::BeginCombo("##filter", currentFilter.c_str())) {
+            for (size_t i = 0; i < m_config.filters.size(); ++i) {
+                bool isSelected = (static_cast<int>(i) == m_selectedFilterIndex);
+                if (ImGui::Selectable(m_config.filters[i].ToDisplayString().c_str(), isSelected)) {
+                    m_selectedFilterIndex = static_cast<int>(i);
+                    RefreshDirectory();
+                }
+                if (isSelected) {
+                    ImGui::SetItemDefaultFocus();
+                }
             }
-            if (isSelected) {
-                ImGui::SetItemDefaultFocus();
-            }
+            ImGui::EndCombo();
         }
-        ImGui::EndCombo();
     }
 
     ImGui::PopStyleVar();
