@@ -266,18 +266,42 @@ void FileBrowserDialog::RenderToolbar() {
         }
     }
 
-    // Sort dropdown (right-aligned, scaled)
-    float sortWidth = m_config.touchMode
-        ? BaseSize::TOUCH_SORT_COMBO_WIDTH * GetScale()
-        : BaseSize::SORT_COMBO_WIDTH * GetScale();
+    // Sort dropdown (right-aligned, auto-sized from labels)
+    char sortLabels[6][64];
+    snprintf(sortLabels[0], sizeof(sortLabels[0]), "Name %s", icons.sortAlphaDown);
+    snprintf(sortLabels[1], sizeof(sortLabels[1]), "Name %s", icons.sortAlphaUp);
+    snprintf(sortLabels[2], sizeof(sortLabels[2]), "Size %s", icons.sortAmountUp);
+    snprintf(sortLabels[3], sizeof(sortLabels[3]), "Size %s", icons.sortAmountDown);
+    snprintf(sortLabels[4], sizeof(sortLabels[4]), "Date %s", icons.sortAmountUp);
+    snprintf(sortLabels[5], sizeof(sortLabels[5]), "Date %s", icons.sortAmountDown);
+
+    // Auto-size from longest label + combo arrow
+    float sortWidth = 0;
+    for (int i = 0; i < 6; ++i) {
+        float w = ImGui::CalcTextSize(sortLabels[i]).x;
+        if (w > sortWidth) sortWidth = w;
+    }
+    sortWidth += ImGui::GetFrameHeight() + ImGui::GetStyle().FramePadding.x * 4;
+
     ImGui::SameLine(ImGui::GetContentRegionAvail().x - sortWidth);
     ImGui::SetNextItemWidth(sortWidth);
 
-    const char* sortLabels[] = {"Name ^", "Name v", "Size ^", "Size v", "Date ^", "Date v"};
+    // Build items string for Combo (null-separated, double-null terminated)
+    const char* sortItems[6] = { sortLabels[0], sortLabels[1], sortLabels[2], sortLabels[3], sortLabels[4], sortLabels[5] };
     int sortIndex = static_cast<int>(m_sortOrder);
-    if (ImGui::Combo("##sort", &sortIndex, sortLabels, 6)) {
-        m_sortOrder = static_cast<SortOrder>(sortIndex);
-        RefreshDirectory();
+    const char* currentLabel = sortItems[sortIndex];
+    if (ImGui::BeginCombo("##sort", currentLabel)) {
+        for (int i = 0; i < 6; ++i) {
+            bool isSelected = (sortIndex == i);
+            if (ImGui::Selectable(sortItems[i], isSelected)) {
+                m_sortOrder = static_cast<SortOrder>(i);
+                RefreshDirectory();
+            }
+            if (isSelected) {
+                ImGui::SetItemDefaultFocus();
+            }
+        }
+        ImGui::EndCombo();
     }
 
     ImGui::Separator();

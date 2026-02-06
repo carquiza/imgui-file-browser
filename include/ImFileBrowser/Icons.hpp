@@ -32,6 +32,12 @@ struct IconSet {
     const char* close = "X";
     const char* check = "v";
 
+    // Sorting
+    const char* sortAlphaDown = "A-Z";   // Name ascending
+    const char* sortAlphaUp = "Z-A";     // Name descending
+    const char* sortAmountDown = "9-1";  // Size/date descending
+    const char* sortAmountUp = "1-9";    // Size/date ascending
+
     // Dialog icons
     const char* info = "i";
     const char* warning = "!";
@@ -72,6 +78,12 @@ struct IconSet {
         icons.save = "\xEF\x83\x87";        // U+F0C7 - save
         icons.close = "\xEF\x80\x8D";       // U+F00D - times
         icons.check = "\xEF\x80\x8C";       // U+F00C - check
+
+        // Sorting
+        icons.sortAlphaDown = "\xEF\x85\x9D";  // U+F15D - sort-alpha-down (A-Z)
+        icons.sortAlphaUp = "\xEF\x85\x9E";    // U+F15E - sort-alpha-up (Z-A)
+        icons.sortAmountDown = "\xEF\x85\xA0";  // U+F160 - sort-amount-down
+        icons.sortAmountUp = "\xEF\x85\xA1";    // U+F161 - sort-amount-up
 
         // Dialog icons
         icons.info = "\xEF\x81\x9A";        // U+F05A - info-circle
