@@ -187,9 +187,6 @@ void FileBrowserDialog::RenderToolbar() {
     // Touch mode: use wider buttons with icon + text for clarity
     // Desktop mode: use compact icon-only buttons (all scaled)
     float buttonHeight = m_buttonHeight;
-    float iconButtonWidth = m_config.touchMode
-        ? BaseSize::TOUCH_ICON_BUTTON_WIDTH * GetScale()
-        : BaseSize::ICON_BUTTON_WIDTH * GetScale();
 
     // Build button labels with icons
     char backLabel[32], homeLabel[32], refreshLabel[32], newFolderLabel[32];
@@ -203,6 +200,20 @@ void FileBrowserDialog::RenderToolbar() {
         snprintf(homeLabel, sizeof(homeLabel), "%s", icons.home);
         snprintf(refreshLabel, sizeof(refreshLabel), "%s", icons.refresh);
         snprintf(newFolderLabel, sizeof(newFolderLabel), "%s", icons.newFolder);
+    }
+
+    // Calculate button width: in touch mode, auto-size from text to avoid truncation;
+    // in desktop mode, use fixed icon-only width
+    float iconButtonWidth;
+    if (m_config.touchMode) {
+        const auto& style = ImGui::GetStyle();
+        float maxTextWidth = ImGui::CalcTextSize(backLabel).x;
+        maxTextWidth = std::max(maxTextWidth, ImGui::CalcTextSize(homeLabel).x);
+        maxTextWidth = std::max(maxTextWidth, ImGui::CalcTextSize(refreshLabel).x);
+        maxTextWidth = std::max(maxTextWidth, ImGui::CalcTextSize(newFolderLabel).x);
+        iconButtonWidth = maxTextWidth + style.FramePadding.x * 2.0f;
+    } else {
+        iconButtonWidth = BaseSize::ICON_BUTTON_WIDTH * GetScale();
     }
 
     // Back/Up button
