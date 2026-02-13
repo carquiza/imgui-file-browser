@@ -148,6 +148,7 @@ endif()
 # Compiler-specific options
 if(MSVC)
     target_compile_options(ImFileBrowser PRIVATE /W4)
+    target_compile_definitions(ImFileBrowser PRIVATE NOMINMAX)
 else()
     target_compile_options(ImFileBrowser PRIVATE -Wall -Wextra)
 endif()
