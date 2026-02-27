@@ -3,9 +3,10 @@
 # This builds the test application separately from the main library
 
 set -e  # Exit on error
+cd "$(dirname "$0")/.."
 
 # Configuration
-BUILD_DIR="build_test"
+BUILD_DIR="build-linux-tests"
 CONFIG="Debug"
 
 # Colors for output
@@ -27,6 +28,18 @@ else
     echo "Make sure you have installed: libglfw3-dev libgl1-mesa-dev"
 fi
 
+# Set overlay ports from environment variable
+OVERLAY_ARG=""
+if [ -n "$VCPKG_OVERLAY_PORTS" ]; then
+    OVERLAY_ARG="-DVCPKG_OVERLAY_PORTS=$VCPKG_OVERLAY_PORTS"
+fi
+
+# Share vcpkg_installed globally across all projects
+VCPKG_INSTALLED_ARG=""
+if [ -n "$DEV_SOURCE_ROOT" ]; then
+    VCPKG_INSTALLED_ARG="-DVCPKG_INSTALLED_DIR=$DEV_SOURCE_ROOT/vcpkg_installed"
+fi
+
 # Create build directory
 mkdir -p "$BUILD_DIR"
 
@@ -37,7 +50,9 @@ cd "$BUILD_DIR"
 
 cmake ../test \
     -DCMAKE_BUILD_TYPE=$CONFIG \
-    $TOOLCHAIN_ARG
+    $TOOLCHAIN_ARG \
+    $OVERLAY_ARG \
+    $VCPKG_INSTALLED_ARG
 
 if [ $? -ne 0 ]; then
     echo ""

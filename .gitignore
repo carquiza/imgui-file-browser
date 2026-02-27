@@ -1,29 +1,15 @@
 # Build directories
-build/
+build-linux/
+build-linux-debug/
+build-linux-tests/
+build-linux-unit-tests/
+build-win/
+build-win-debug/
 cmake-build-*/
 out/
 
-# IDE files
-.vs/
-.vscode/
-*.user
-*.suo
-*.sln
-*.vcxproj*
-.idea/
-*.swp
-*~
-
-# Compiled files
-*.o
-*.obj
-*.exe
-*.dll
-*.so
-*.dylib
-*.a
-*.lib
-*.pdb
+# Legacy build directories (to be removed)
+build_test/
 
 # CMake generated
 CMakeCache.txt
@@ -31,41 +17,29 @@ CMakeFiles/
 cmake_install.cmake
 Makefile
 compile_commands.json
-install_manifest.txt
+_deps/
+CMakeUserPresets.json
 
-# Package managers
+# vcpkg
 vcpkg_installed/
 
-# OS files
-.DS_Store
-Thumbs.db
+# IDE
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
 
-# Logs
-*.log
+# Compiled objects
+*.o
+*.obj
+*.a
+*.lib
+*.so
+*.dll
+*.dylib
+*.exe
+*.pdb
 
-# Temporary files
-*.tmp
-*.temp
-temp_*.txt
-
-# ImGui settings (user-specific layout)
+# ImGui
 imgui.ini
-external/imgui
-
-# Project specific
-VisionSystemInstaller.exe
-*.zipped
-
-# Kill this Claude artifact
-nul
-
-TestData/
-.chunkhound.json
-.chunkhound/db
-.chunkhound/db.wal
-.gemini/settings.json
-.claude/settings.local.json
-.mcp.json
-
-build/
-build_*/

@@ -1,0 +1,45 @@
+{
+  "version": 6,
+  "cmakeMinimumRequired": {"major": 3, "minor": 21},
+  "configurePresets": [
+    {
+      "name": "linux-release",
+      "displayName": "Linux Release",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build-linux",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
+      }
+    },
+    {
+      "name": "linux-debug",
+      "displayName": "Linux Debug",
+      "inherits": "linux-release",
+      "binaryDir": "${sourceDir}/build-linux-debug",
+      "cacheVariables": {"CMAKE_BUILD_TYPE": "Debug"}
+    },
+    {
+      "name": "win-release",
+      "displayName": "Windows Release",
+      "generator": "Visual Studio 17 2022",
+      "architecture": "x64",
+      "binaryDir": "${sourceDir}/build-win",
+      "cacheVariables": {
+        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
+      }
+    },
+    {
+      "name": "win-debug",
+      "displayName": "Windows Debug",
+      "inherits": "win-release",
+      "binaryDir": "${sourceDir}/build-win-debug"
+    }
+  ],
+  "buildPresets": [
+    {"name": "linux-release", "configurePreset": "linux-release", "configuration": "Release"},
+    {"name": "linux-debug", "configurePreset": "linux-debug", "configuration": "Debug"},
+    {"name": "win-release", "configurePreset": "win-release", "configuration": "Release"},
+    {"name": "win-debug", "configurePreset": "win-debug", "configuration": "Debug"}
+  ]
+}
