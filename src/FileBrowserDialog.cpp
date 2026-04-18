@@ -157,7 +157,8 @@ Result FileBrowserDialog::Render() {
     }
 
     bool windowOpen = true;
-    if (ImGui::Begin(m_config.title.c_str(), &windowOpen, flags)) {
+    bool* pOpen = m_config.touchMode ? nullptr : &windowOpen;
+    if (ImGui::Begin(m_config.title.c_str(), pOpen, flags)) {
         if (!windowOpen) {
             Close();
         } else {
@@ -191,7 +192,7 @@ void FileBrowserDialog::RenderToolbar() {
     // Build button labels with icons
     char backLabel[32], homeLabel[32], refreshLabel[32], newFolderLabel[32];
     if (m_config.touchMode) {
-        snprintf(backLabel, sizeof(backLabel), "%s Back", icons.arrowUp);
+        snprintf(backLabel, sizeof(backLabel), "%s Up", icons.arrowUp);
         snprintf(homeLabel, sizeof(homeLabel), "%s Home", icons.home);
         snprintf(refreshLabel, sizeof(refreshLabel), "%s Refresh", icons.refresh);
         snprintf(newFolderLabel, sizeof(newFolderLabel), "%s New", icons.newFolder);
@@ -398,7 +399,13 @@ void FileBrowserDialog::RenderFileList() {
     // + RenderButtons will consume (separator, item spacing, frame padding, etc.)
     const float itemSpacing = ImGui::GetStyle().ItemSpacing.y;
     const float separatorHeight = itemSpacing * 2 + 1.0f;  // Separator: spacing above + 1px line + spacing below
-    float reservedHeight = separatorHeight + m_buttonHeight + itemSpacing;  // Separator + buttons + bottom pad
+    float touchBtnHeight = BaseSize::TOUCH_BUTTON_HEIGHT * GetScale();
+    // Touch mode: two stacked full-width buttons + spacing between them + extra spacing
+    // Desktop mode: single row of buttons
+    float buttonsHeight = m_config.touchMode
+        ? (touchBtnHeight * 2 + itemSpacing * 4)
+        : (m_buttonHeight + itemSpacing);
+    float reservedHeight = separatorHeight + buttonsHeight;  // Separator + buttons
     if (m_config.mode != Mode::SelectFolder) {
         reservedHeight += m_inputHeight + itemSpacing;   // Filename + filter (single row)
     }
@@ -637,21 +644,7 @@ void FileBrowserDialog::RenderFilenameAndFilter() {
 void FileBrowserDialog::RenderButtons() {
     ImGui::Separator();
 
-    // Right-align buttons (scaled)
-    float buttonWidth = m_buttonWidth;
-    float spacing = BaseSize::BUTTON_SPACING * GetScale();
-    float totalWidth = buttonWidth * 2 + spacing;
-
-    ImGui::SetCursorPosX(ImGui::GetContentRegionAvail().x - totalWidth + ImGui::GetCursorPosX());
-
-    // Cancel button
-    if (ImGui::Button("Cancel", ImVec2(buttonWidth, m_buttonHeight))) {
-        Close();
-    }
-
-    ImGui::SameLine(0, spacing);
-
-    // OK button (label depends on mode)
+    // OK button label depends on mode
     const char* okLabel = "Open";
     switch (m_config.mode) {
         case Mode::Open: okLabel = "Open"; break;
@@ -661,28 +654,86 @@ void FileBrowserDialog::RenderButtons() {
 
     bool canSelect = IsValidSelection();
 
-    ImGui::BeginDisabled(!canSelect);
-    if (ImGui::Button(okLabel, ImVec2(buttonWidth, m_buttonHeight))) {
-        if (canSelect) {
-            std::string fullPath = BuildFullPath();
+    if (m_config.touchMode) {
+        // Touch mode: full-width stacked buttons, primary action on top and highlighted
+        float contentWidth = ImGui::GetContentRegionAvail().x;
+        float touchBtnHeight = BaseSize::TOUCH_BUTTON_HEIGHT * GetScale();
+        ImVec2 btnSize(contentWidth, touchBtnHeight);
 
-            // Check for overwrite in Save mode
-            if (m_config.mode == Mode::Save &&
-                FileSystemHelper::Exists(fullPath) &&
-                FileSystemHelper::IsFile(fullPath))
-            {
-                m_overwritePath = fullPath;
-                m_showOverwriteConfirm = true;
-            } else {
-                m_selectedPath = fullPath;
-                m_result = Result::Selected;
-                m_isOpen = false;
-                SetLastPath(m_currentPath);  // Persist for next time
-                NotifyFileSelected(m_selectedPath);
+        ImGui::Spacing();
+
+        // Primary action button (highlighted with blue, white text)
+        ImGui::BeginDisabled(!canSelect);
+        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.13f, 0.39f, 0.70f, 1.0f));
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.18f, 0.47f, 0.82f, 1.0f));
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.10f, 0.33f, 0.60f, 1.0f));
+        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 1.0f, 1.0f, 1.0f));
+        if (ImGui::Button(okLabel, btnSize)) {
+            if (canSelect) {
+                std::string fullPath = BuildFullPath();
+                if (m_config.mode == Mode::Save &&
+                    FileSystemHelper::Exists(fullPath) &&
+                    FileSystemHelper::IsFile(fullPath))
+                {
+                    m_overwritePath = fullPath;
+                    m_showOverwriteConfirm = true;
+                } else {
+                    m_selectedPath = fullPath;
+                    m_result = Result::Selected;
+                    m_isOpen = false;
+                    SetLastPath(m_currentPath);
+                    NotifyFileSelected(m_selectedPath);
+                }
             }
         }
+        ImGui::PopStyleColor(4);
+        ImGui::EndDisabled();
+
+        ImGui::Spacing();
+
+        // Cancel button (neutral)
+        if (ImGui::Button("Cancel", btnSize)) {
+            Close();
+        }
+
+        ImGui::Spacing();
+    } else {
+        // Desktop mode: right-aligned side-by-side buttons
+        float buttonWidth = m_buttonWidth;
+        float spacing = BaseSize::BUTTON_SPACING * GetScale();
+        float totalWidth = buttonWidth * 2 + spacing;
+
+        ImGui::SetCursorPosX(ImGui::GetContentRegionAvail().x - totalWidth + ImGui::GetCursorPosX());
+
+        // Cancel button
+        if (ImGui::Button("Cancel", ImVec2(buttonWidth, m_buttonHeight))) {
+            Close();
+        }
+
+        ImGui::SameLine(0, spacing);
+
+        // OK button
+        ImGui::BeginDisabled(!canSelect);
+        if (ImGui::Button(okLabel, ImVec2(buttonWidth, m_buttonHeight))) {
+            if (canSelect) {
+                std::string fullPath = BuildFullPath();
+                if (m_config.mode == Mode::Save &&
+                    FileSystemHelper::Exists(fullPath) &&
+                    FileSystemHelper::IsFile(fullPath))
+                {
+                    m_overwritePath = fullPath;
+                    m_showOverwriteConfirm = true;
+                } else {
+                    m_selectedPath = fullPath;
+                    m_result = Result::Selected;
+                    m_isOpen = false;
+                    SetLastPath(m_currentPath);
+                    NotifyFileSelected(m_selectedPath);
+                }
+            }
+        }
+        ImGui::EndDisabled();
     }
-    ImGui::EndDisabled();
 }
 
 void FileBrowserDialog::RenderNewFolderPopup() {
